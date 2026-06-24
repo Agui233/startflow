@@ -1,0 +1,263 @@
+// ============================================
+// StartFlow — Vercel Serverless Function
+// POST /api/generate
+// ============================================
+
+// ============================================
+// SYSTEM_PROMPT — 产品核心规则，不要改写
+// ============================================
+const SYSTEM_PROMPT = `
+你是一个行为启动翻译器。你的唯一任务是把用户输入的拖延任务翻译成一句极小的物理启动动作。
+
+你的职责：
+- 判断用户输入的任务类型
+- 提取任务中可触碰的具体对象
+- 选择一个极小动作模板
+- 输出一句物理启动动作
+
+# 核心心法
+你不是给建议，不是分析任务，不是制定计划。
+你的目标不是让用户完成任务，而是让用户的手指或身体先动起来。
+禁止出现"思考类"动词。
+每类任务都对应一个固定动作句式，不要自由发挥。
+
+# 绝对禁忌
+1. 绝对禁止使用这些词：分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结、步骤、首先、建议、计划。
+2. 绝对禁止输出计划、步骤列表、原因解释、心理建设建议或多个方案。
+3. 绝对禁止输出任何前缀和后缀，例如"你的第一步是：""建议你""你可以""祝你成功"。
+4. 绝对禁止让用户完成完整任务或过大的动作（如"完成报告""写完邮件""整理所有资料"）。
+5. 绝对禁止输出超过一个动作链。
+
+# 强制动作词
+你必须且必须使用以下身体或手指动作词之一：
+打开、拿出、触摸、按下、写下、写出、打出、输入、放进、系上、翻到、找出、右键、点开、移动
+
+每次输出必须包含至少一个上述动作词。
+
+# 分类映射模板
+
+【空白创造类】
+触发词：写、画、设计、码代码、做PPT、做方案、写文案、写报告、做海报、剪视频、做视频、写论文、作品集、做幻灯片
+模板：打开[具体软件或文档]，只打出[标题、文件名或日期]。
+
+【物理整理类】
+触发词：收拾、打扫、搬家、整理、清理、归档、洗衣服、刷碗、发票、文件、文件夹、储物
+模板：拿出[一个容器或工具]，只把[1个最小单位物品]放进去。
+
+【沟通类】
+触发词：联系、汇报、发邮件、发消息、打电话、找客户、问人、回复、通知、沟通
+模板：打开[沟通工具]，只在输入框打出[对方称呼或一句无意义开头]。
+
+【高情绪阻力沟通类】
+触发词：拖延很久、不敢联系、愧疚、害怕、尴尬、客户、老板、前任、道歉、催、报价单
+模板：打开[沟通工具]，只输入[对方名字首字母或号码前3位]，然后停止，光标闪烁3秒。
+
+【身体行动类】
+触发词：跑步、锻炼、运动、健身、瑜伽、冥想、跳舞、散步、拉伸
+模板：找出[工具或装备]，让身体接触它，只做[1个惯性动作]。
+
+【学习输入类】
+触发词：看书、学习、背单词、学英语、读资料、阅读、看论文、学Python、学编程、上课、听课
+模板：打开[书、资料、课程或软件]，只翻到第一页、点开第一课或触摸第一行字。
+
+【抽象目标类】
+触发词：提升自己、找灵感、人生方向、做副业、变好、变自律、改变现状、迷茫、成长
+模板：打开备忘录，写下"关于[任务]"的第一念，然后打出3个略相关的词。
+
+【无法判断类】
+适用于无法归入以上任何类的任务。
+模板：打开备忘录，写下"关于[任务]的第一念"，然后随便打5个字。
+
+# 输出格式
+只输出一句话。
+20字以内。不要引号。不要加粗。不要换行。不要编号。除了句号不要使用多余标点。
+`.trim();
+
+// ============================================
+// 本地保底动作生成
+// ============================================
+function generateFallbackAction(task, tools) {
+  const lower = task.toLowerCase();
+  const toolHint = (tools && tools.trim()) ? tools.trim() : null;
+
+  if (toolHint) {
+    if (toolHint.includes('Notion') || toolHint.includes('notion')) return `打开 Notion，只新建一个空白页。`;
+    if (toolHint.includes('手机') || toolHint.includes('iPhone') || toolHint.includes('ipad') || toolHint.includes('iPad')) return `拿起${toolHint}，只打开相关应用。`;
+    if (toolHint.includes('电脑') || toolHint.includes('Mac') || toolHint.includes('mac')) return `打开电脑，只启动相关软件。`;
+    if (toolHint.includes('美团') || toolHint.includes('饿了么')) return `打开${toolHint}，只浏览第一个推荐。`;
+    if (toolHint.includes('微信') || toolHint.includes('WeChat')) return `打开微信，只输入对方称呼。`;
+    if (toolHint.includes('邮箱') || toolHint.includes('mail')) return `打开邮箱，只写一个标题。`;
+    if (toolHint.includes('书') || toolHint.includes('课本') || toolHint.includes('教材')) return `翻开${toolHint}，用手指触摸第一行字。`;
+    if (toolHint.includes('瑜伽垫')) return `铺开瑜伽垫，站到垫子边缘。`;
+    if (toolHint.includes('跑鞋') || toolHint.includes('运动鞋')) return `找出${toolHint}，系上左脚鞋带。`;
+    return `拿出${toolHint}，只做一个最小动作。`;
+  }
+
+  if (/写|报告|文案|PPT|方案|做ppt|代码|设计|论文|周报/.test(lower)) return `打开一个空白文档，只打出任务标题。`;
+  if (/发邮件|发消息|联系|客户|老板|同事|回复|微信/.test(lower)) return `打开聊天或邮箱，只输入对方称呼。`;
+  if (/跑步|运动|锻炼|健身/.test(lower)) return `找出运动鞋，系上左脚鞋带。`;
+  if (/看书|学习|背单词|读资料|阅读|读书/.test(lower)) return `打开学习资料，用手指触摸第一行字。`;
+  if (/收拾|整理|打扫|清理|归档|发票|文件夹/.test(lower)) return `拿出一个袋子，只放进一个物品。`;
+  if (/瑜伽|冥想/.test(lower)) return `铺开垫子，坐下来闭上眼。`;
+
+  return `打开备忘录，写下关于这个任务的第一念。`;
+}
+
+// ============================================
+// 调用 DeepSeek API（带超时）
+// ============================================
+async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek-v4-flash',
+        messages,
+        temperature,
+        max_tokens: 200,
+        stream: false,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    return response;
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
+// ============================================
+// 提取 action（兼容多种返回格式）
+// ============================================
+function extractAction(data) {
+  return data.choices?.[0]?.message?.content?.trim()
+      || data.choices?.[0]?.text?.trim()
+      || data.output_text?.trim()
+      || '';
+}
+
+// ============================================
+// 打印 DeepSeek 响应日志（不含 API Key）
+// ============================================
+function logDeepSeekResponse(label, data) {
+  const choice = data.choices?.[0];
+  console.log(`[DeepSeek ${label}] id=${data.id} model=${data.model} finish_reason=${choice?.finish_reason} usage=${JSON.stringify(data.usage)} content_length=${(choice?.message?.content || '').length}`);
+  if (choice?.message?.reasoning_content) {
+    console.log(`[DeepSeek ${label}] reasoning_content_length=${choice.message.reasoning_content.length}`);
+  }
+}
+
+// ============================================
+// Vercel Serverless Handler
+// ============================================
+module.exports = async (req, res) => {
+  // 只接受 POST
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
+
+  try {
+    const { task, tools } = req.body || {};
+    const taskStr = (task || '').trim();
+    const toolsStr = (tools || '').trim();
+
+    if (!taskStr) {
+      res.status(400).json({ error: '请输入有效的任务描述' });
+      return;
+    }
+
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+
+    if (!apiKey) {
+      const fallbackAction = generateFallbackAction(taskStr, toolsStr);
+      res.status(200).json({ action: fallbackAction, source: 'fallback', warning: '未配置 AI Key，已使用本地保底动作' });
+      return;
+    }
+
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'user', content: taskStr },
+    ];
+
+    // 第一次调用
+    let response;
+    try {
+      response = await callDeepSeek(apiKey, messages, 0.1, 12000);
+    } catch (err) {
+      console.error(`DeepSeek 调用异常:`, err.code || err.message);
+      const fallbackAction = generateFallbackAction(taskStr, toolsStr);
+      res.status(200).json({ action: fallbackAction, source: 'fallback', warning: 'AI 请求异常，已使用本地保底动作' });
+      return;
+    }
+
+    if (!response.ok) {
+      const status = response.status;
+      const errorText = await response.text();
+      console.error(`DeepSeek API 错误 (${status}):`, errorText);
+
+      if (status >= 400 && status < 500) {
+        const fallbackAction = generateFallbackAction(taskStr, toolsStr);
+        res.status(200).json({ action: fallbackAction, source: 'fallback', warning: `AI (${status})，已使用本地保底动作` });
+        return;
+      }
+
+      // 5xx → 重试一次
+      console.warn('DeepSeek 5xx，重试一次');
+      try {
+        const retryResp = await callDeepSeek(apiKey, messages, 0.3, 12000);
+        if (retryResp.ok) {
+          const retryData = await retryResp.json();
+          logDeepSeekResponse('retry', retryData);
+          const action = extractAction(retryData);
+          if (action) {
+            res.status(200).json({ action, source: 'ai' });
+            return;
+          }
+        }
+      } catch {}
+
+      const fallbackAction = generateFallbackAction(taskStr, toolsStr);
+      res.status(200).json({ action: fallbackAction, source: 'fallback', warning: 'AI 服务异常，已使用本地保底动作' });
+      return;
+    }
+
+    // 2xx
+    const data = await response.json();
+    logDeepSeekResponse('ok', data);
+    let action = extractAction(data);
+
+    // 空内容 → 重试一次
+    if (!action) {
+      console.warn('DeepSeek 返回空内容，重试一次');
+      try {
+        const retryResp = await callDeepSeek(apiKey, messages, 0.5, 12000);
+        if (retryResp.ok) {
+          const retryData = await retryResp.json();
+          logDeepSeekResponse('retry', retryData);
+          action = extractAction(retryData);
+        }
+      } catch {}
+    }
+
+    if (action) {
+      res.status(200).json({ action, source: 'ai' });
+      return;
+    }
+
+    const fallbackAction = generateFallbackAction(taskStr, toolsStr);
+    res.status(200).json({ action: fallbackAction, source: 'fallback', warning: 'AI 返回空，已使用本地保底动作' });
+
+  } catch (err) {
+    console.error('generate 处理异常:', err);
+    res.status(200).json({ action: '打开备忘录，写下关于这个任务的第一念。', source: 'fallback', warning: '服务器内部错误，已使用本地保底动作' });
+  }
+};

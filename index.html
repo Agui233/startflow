@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StartFlow — 行为启动实验</title>
+  <style>
+    /* ============================================
+       StartFlow — 柔和极简风 (单文件)
+       ============================================ */
+
+    /* --- Reset & Base --- */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-green: #DDE6D2;
+      --bg-cream: #F8F1DF;
+      --bg-warm: #F6C7A1;
+      --text-primary: #1F1F1F;
+      --text-secondary: #6F6F6F;
+      --text-muted: #9A9A9A;
+      --border: rgba(0, 0, 0, 0.10);
+      --card-bg: rgba(255, 255, 255, 0.58);
+      --card-bg-solid: rgba(255, 255, 255, 0.85);
+      --btn-primary: #FF6868;
+      --btn-primary-hover: #F25555;
+      --btn-text: #FFFFFF;
+      --radius: 12px;
+      --radius-btn: 10px;
+      --max-w: 640px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+        'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg-green) 0%, var(--bg-cream) 50%, var(--bg-warm) 100%);
+      background-attachment: fixed;
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.7;
+    }
+
+    /* --- App Wrapper --- */
+    .app {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- Header --- */
+    .header {
+      text-align: center;
+      padding: 32px 0 8px;
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+    .logo span { color: var(--btn-primary); }
+    .tagline {
+      margin-top: 4px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+
+    /* --- Views (step visibility) --- */
+    .view { display: none; }
+    .view.active { display: block; animation: fadeUp 0.35s ease; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Cards (glass) --- */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      margin-bottom: 20px;
+    }
+
+    /* --- Typography --- */
+    .card h2 {
+      font-size: 19px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .card p.desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    /* --- Textarea --- */
+    .textarea-wrap { position: relative; margin-bottom: 20px; }
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.7);
+      resize: vertical;
+      min-height: 80px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+    textarea:focus {
+      border-color: var(--btn-primary);
+      box-shadow: 0 0 0 3px rgba(255, 104, 104, 0.10);
+    }
+    textarea::placeholder { color: var(--text-muted); }
+    .char-count {
+      position: absolute;
+      bottom: 8px;
+      right: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* --- Buttons --- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      width: 100%;
+    }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .btn-primary {
+      background: var(--btn-primary);
+      color: var(--btn-text);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--btn-primary-hover);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+    .btn-ghost {
+      background: rgba(0,0,0,0.04);
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { background: rgba(0,0,0,0.08); color: var(--text-primary); }
+
+    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .btn-group.row { flex-direction: row; }
+    .btn-group.row .btn { flex: 1; }
+
+    .btn-sm { padding: 10px 16px; font-size: 13px; width: auto; display: inline-flex; }
+
+    /* === VIEW 1: Input === */
+    .view-input { }
+
+    /* === VIEW 2: Loading === */
+    .view-loading { text-align: center; padding: 48px 0; }
+    .loading-spinner {
+      width: 32px; height: 32px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--btn-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 15px; color: var(--text-secondary); }
+
+    /* === VIEW 3: Action + Timer === */
+    .action-display {
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px 20px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .action-display .action-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .action-display .action-text {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    .action-display .action-task {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      font-style: italic;
+    }
+
+    /* Timer */
+    .timer-section { text-align: center; margin-bottom: 24px; }
+    .timer-display {
+      font-size: 64px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 3px;
+      color: var(--text-primary);
+      line-height: 1;
+      margin: 16px 0 12px;
+    }
+    .timer-display.running {
+      color: var(--btn-primary);
+      animation: timerPulse 1.5s ease-in-out infinite;
+    }
+    .timer-display.done {
+      color: #5cb85c;
+      animation: timerDone 1.5s ease-in-out infinite;
+    }
+    @keyframes timerPulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @keyframes timerDone {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(1.08); }
+    }
+    .timer-progress {
+      width: 100%; height: 4px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .timer-progress-bar {
+      height: 100%; width: 100%;
+      background: var(--btn-primary);
+      border-radius: 4px;
+      transition: width 1s linear;
+    }
+    .timer-progress-bar.done { background: #5cb85c; }
+    .timer-status { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+
+    /* === VIEW 4: Feedback === */
+    .question-block { margin-bottom: 24px; }
+    .question-block:last-of-type { margin-bottom: 28px; }
+    .q-label {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .q-required { color: var(--btn-primary); margin-left: 2px; }
+    .options { display: flex; flex-direction: column; gap: 6px; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: rgba(255,255,255,0.4);
+      font-size: 14px;
+    }
+    .option:hover {
+      border-color: var(--btn-primary);
+      background: rgba(255,104,104,0.05);
+    }
+    .option.selected {
+      border-color: var(--btn-primary);
+      background: rgba(255,104,104,0.08);
+    }
+    .option input[type="radio"] {
+      appearance: none;
+      width: 16px; height: 16px;
+      border: 2px solid var(--text-muted);
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      transition: all var(--transition);
+    }
+    .option input[type="radio"]:checked {
+      border-color: var(--btn-primary);
+      background: var(--btn-primary);
+      box-shadow: inset 0 0 0 3px white;
+    }
+    .option-text { flex: 1; }
+
+    .feedback-textarea { margin-bottom: 20px; }
+    .feedback-textarea textarea {
+      min-height: 60px;
+    }
+    .feedback-textarea label {
+      font-size: 14px;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .feedback-textarea .hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    .feedback-error {
+      font-size: 13px;
+      color: var(--btn-primary);
+      margin-top: 8px;
+      display: none;
+    }
+    .feedback-error.show { display: block; }
+
+    /* === VIEW 5: Thank You === */
+    .view-thanks { text-align: center; padding: 24px 0; }
+    .thanks-icon { font-size: 44px; margin-bottom: 12px; }
+    .thanks-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+    .thanks-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; }
+
+    .summary-box {
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      font-size: 14px;
+    }
+    .summary-row:last-child { border-bottom: none; }
+    .summary-label { color: var(--text-secondary); flex-shrink: 0; min-width: 68px; }
+    .summary-value { font-weight: 500; text-align: right; color: var(--text-primary); }
+
+    .csv-btn-area { margin-top: 12px; }
+
+    /* --- History --- */
+    .history-wrap { margin-top: 32px; flex-shrink: 0; }
+    .history-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 0;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      width: 100%;
+      font-family: inherit;
+    }
+    .history-toggle:hover { color: var(--text-secondary); }
+    .history-count-badge {
+      font-size: 11px;
+      background: var(--border);
+      padding: 1px 10px;
+      border-radius: 12px;
+    }
+    .history-list { max-height: 300px; overflow-y: auto; }
+    .history-list.empty { text-align: center; font-size: 13px; color: var(--text-muted); padding: 12px 0; }
+    .history-item {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .hi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+    .hi-task {
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 240px;
+    }
+    .hi-action { font-size: 12px; color: var(--text-muted); }
+    .hi-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* --- Footer --- */
+    .footer {
+      text-align: center;
+      padding: 24px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: auto;
+    }
+
+    /* ============================================
+       移动端适配
+       ============================================ */
+    @media (max-width: 480px) {
+      .app { padding: 20px 16px 40px; }
+      .card { padding: 24px 18px; }
+      .timer-display { font-size: 48px; }
+      .action-display .action-text { font-size: 17px; }
+      .option { padding: 8px 12px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <div class="logo">Start<span>Flow</span></div>
+      <p class="tagline">极小启动 · 验证开始</p>
+    </header>
+
+    <!-- ===== VIEW 1: 输入 ===== -->
+    <section class="view view-input active" id="view-input">
+      <div class="card">
+        <h2>你在拖延什么？</h2>
+        <p class="desc">说一件你一直想开始、但始终没行动的事。</p>
+        <div class="textarea-wrap">
+          <textarea id="taskInput" rows="4" maxlength="200" placeholder="例如：写完那份拖了一周的产品需求文档…"></textarea>
+          <span class="char-count"><span id="charCount">0</span>/200</span>
+        </div>
+        <div class="textarea-wrap" style="margin-bottom: 12px;">
+          <textarea id="toolsInput" rows="3" maxlength="200" placeholder="你通常会用什么材料、工具或环境来做这件事？（选填）&#10;例如：新概念英语4、Notion、手机备忘录、Excel、家里的瑜伽垫、健身房" style="min-height: 68px; resize: none;"></textarea>
+        </div>
+        <button class="btn btn-primary" id="btnGetAction" disabled>获取我的启动动作</button>
+      </div>
+    </section>
+
+    <!-- ===== VIEW 2: Loading ===== -->
+    <section class="view view-loading" id="view-loading">
+      <div class="card" style="background:transparent;backdrop-filter:none;border:none;padding:40px 0;">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">正在生成你的启动动作…</p>
+      </div>
+    </section>
+
+    <!-- ===== VIEW 3: 动作 + 计时 ===== -->
+    <section class="view" id="view-action">
+      <div class="card">
+        <div class="action-display">
+          <div class="action-label">最小启动动作</div>
+          <p class="action-text" id="actionText"></p>
+          <p class="action-task" id="actionTask"></p>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-section">
+          <div class="timer-display" id="timerDisplay">
+            <span id="timerMin">02</span>:<span id="timerSec">00</span>
+          </div>
+          <div class="timer-progress">
+            <div class="timer-progress-bar" id="timerBar"></div>
+          </div>
+          <p class="timer-status" id="timerStatus">准备就绪</p>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btnStartTimer">开始 2 分钟</button>
+          <button class="btn btn-ghost" id="btnDoneEarly" disabled>我已经做完了</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== VIEW 4: 反馈 ===== -->
+    <section class="view" id="view-feedback">
+      <div class="card">
+        <h2>实验反馈</h2>
+        <p class="desc">回答几个问题，验证这个启动动作是否有效。</p>
+
+        <div class="question-block">
+          <span class="q-label">Q1. 刚才那 2 分钟，你执行了这个动作吗？<span class="q-required">*</span></span>
+          <div class="options" data-question="q1">
+            <label class="option"><input type="radio" name="q1" value="完全没执行"><span class="option-text">完全没执行</span></label>
+            <label class="option"><input type="radio" name="q1" value="执行了一部分"><span class="option-text">执行了一部分</span></label>
+            <label class="option"><input type="radio" name="q1" value="完整执行了"><span class="option-text">完整执行了</span></label>
+            <label class="option"><input type="radio" name="q1" value="执行后还多做了"><span class="option-text">执行后还多做了</span></label>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <span class="q-label">Q2. 执行完这个动作后，你的状态是？<span class="q-required">*</span></span>
+          <div class="options" data-question="q2">
+            <label class="option"><input type="radio" name="q2" value="依然不想做"><span class="option-text">依然不想做</span></label>
+            <label class="option"><input type="radio" name="q2" value="有点想继续了"><span class="option-text">有点想继续了</span></label>
+            <label class="option"><input type="radio" name="q2" value="已经顺其自然地继续了"><span class="option-text">已经顺其自然地继续了</span></label>
+            <label class="option"><input type="radio" name="q2" value="停不下来，进入了心流"><span class="option-text">停不下来，进入了心流</span></label>
+          </div>
+        </div>
+
+        <div class="question-block">
+          <span class="q-label">Q3. 如果没有这个提示，你接下来会开始吗？<span class="q-required">*</span></span>
+          <div class="options" data-question="q3">
+            <label class="option"><input type="radio" name="q3" value="肯定不会"><span class="option-text">肯定不会</span></label>
+            <label class="option"><input type="radio" name="q3" value="可能不会"><span class="option-text">可能不会</span></label>
+            <label class="option"><input type="radio" name="q3" value="也许会"><span class="option-text">也许会</span></label>
+            <label class="option"><input type="radio" name="q3" value="会的，而且会认真做"><span class="option-text">会的，而且会认真做</span></label>
+          </div>
+        </div>
+
+        <div class="feedback-textarea">
+          <label>关于刚才的体验，你还有什么想说的吗？ <span class="hint">（选填）</span></label>
+          <textarea id="feedbackNote" rows="2" placeholder="任何感受、想法或建议…"></textarea>
+        </div>
+
+        <p class="feedback-error" id="feedbackError">请回答所有必答题后再提交。</p>
+        <button class="btn btn-primary" id="btnSubmitFeedback">提交反馈</button>
+      </div>
+    </section>
+
+    <!-- ===== VIEW 5: 感谢 ===== -->
+    <section class="view view-thanks" id="view-thanks">
+      <div class="card">
+        <div class="thanks-icon">✅</div>
+        <p class="thanks-title">实验完成</p>
+        <p class="thanks-desc">感谢参与！你的一个动作，帮助验证了 StartFlow 的方法。</p>
+
+        <div class="summary-box" id="summaryBox"></div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btnTryAgain">再试一次</button>
+          <button class="btn btn-ghost btn-sm csv-btn-area" id="btnExportCSV">导出 CSV</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 实验记录 ===== -->
+    <div class="history-wrap" id="historyWrap">
+      <button class="history-toggle" id="historyToggle">
+        <span>实验记录</span>
+        <span class="history-count-badge" id="historyBadge">0</span>
+      </button>
+      <div class="history-list" id="historyList" style="display:none;">
+        <p class="history-list empty">还没有实验记录</p>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>StartFlow · 一次一个动作，打破拖延惯性</p>
+    </footer>
+  </div>
+
+  <script>
+  console.log('StartFlow script loaded');
+  (function() {
+    console.log('IIFE started');
+    'use strict';
+
+    // ============================================
+    // State
+    // ============================================
+    let currentTask = '';
+    let currentAction = '';
+    let currentTools = '';
+    let timerSeconds = 120;
+    let timerRunning = false;
+    let timerCompleted = false;
+    let timerElapsed = 0;
+    let timerInterval = null;
+    let history = [];
+
+    const STORAGE_KEY = 'startflow_history';
+
+    // ============================================
+    // SYSTEM_PROMPT — AI 行为启动发令枪
+    // 产品核心规则，不要改写
+    // ============================================
+    const SYSTEM_PROMPT = `
+你是一个极致严格的"行为启动发令枪"。你的唯一任务是根据用户输入的任务，输出一个极简的物理启动动作。
+
+# 核心心法
+禁止出现"思考类"动词。
+不要帮用户分析任务，不要帮用户制定计划，不要解释原因。
+你的目标不是让用户完成任务，而是让用户的手指或身体先动起来。
+
+# 绝对禁忌
+1. 绝对禁止使用这些词：分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结。
+2. 绝对禁止输出计划、步骤列表、原因解释、心理建设建议。
+3. 绝对禁止输出任何前缀和后缀，例如"你的第一步是：""建议你""祝你成功"。
+4. 绝对禁止让用户完成完整任务。
+5. 绝对禁止输出超过一个动作链。
+
+# 强制动作词
+你必须优先使用这些身体或手指动作词：
+打开、拿出、触摸、按下、写下、写出、打出、输入、放进、系上、翻到、找出、右键、点开、移动。
+
+# 分类映射规则
+
+【空白创造类】
+触发词：写、画、设计、码代码、做PPT、做方案、写文案、写报告、做海报、剪视频
+规则：让用户打开具体软件或文档，只写标题、日期或文件名。
+输出句式：
+打开[具体软件或文档]，只打出[标题、日期或文件名]。
+
+示例：
+用户输入：写年终总结
+输出：打开文档，只打出"年终总结"四个字。
+
+用户输入：设计一张海报
+输出：打开设计软件，新建一个空白画布。
+
+【物理整理类】
+触发词：收拾、打扫、搬家、整理、清理、归档、洗衣服、刷碗
+规则：让用户拿出一个容器或工具，只处理一个最小单位物品。
+输出句式：
+拿出[一个容器或工具]，只把[1个最小单位物品]放进去。
+
+示例：
+用户输入：收拾衣柜
+输出：拿出一个袋子，只把地上的一件衣服放进去。
+
+用户输入：整理电脑桌面
+输出：右键桌面，新建一个文件夹，命名为"待归档"。
+
+【常规信息/沟通类】
+触发词：联系、汇报、发邮件、发消息、打电话、找客户、问人、回复
+规则：让用户打开沟通工具，只触碰输入框，不发送实质内容。
+输出句式：
+打开[沟通工具]，只在输入框打出[对方称呼或一句无意义开头]。
+
+示例：
+用户输入：发周报邮件
+输出：打开邮箱，标题只写"周报初稿"。
+
+用户输入：问同事项目进度
+输出：打开聊天窗口，只输入"在吗"。
+
+【身体/学习类】
+触发词：锻炼、看书、学英语、冥想、跑步、运动、学习、背单词、读书
+规则：让用户找出工具或材料，让身体接触它，只做一个惯性动作。
+输出句式：
+找出[工具或材料]，让身体触摸它，只做[1个无脑惯性动作]。
+
+示例：
+用户输入：去跑步
+输出：找出跑鞋，系上左脚鞋带。
+
+用户输入：看专业书
+输出：翻到第一页，用手指触摸第一行字。
+
+# 边缘情况
+
+【高情绪阻力沟通】
+如果用户任务包含：拖延很久、不敢联系、愧疚、害怕、尴尬、客户、老板、前任、道歉、催、报价单。
+规则：只允许触碰沟通通道，绝对禁止发送实质内容。
+输出句式：
+打开[沟通工具]，只输入[对方名字首字母或号码前3位]，然后停止，光标闪烁3秒。
+
+示例：
+用户输入：拖了三天没给客户发报价单
+输出：打开邮箱，只输入客户名字首字母，然后停止，光标闪烁3秒。
+
+【抽象/虚无任务】
+如果用户任务是：提升自己、找灵感、想人生方向、做副业、变好、变自律、改变现状，或无法归类。
+规则：使用智能废稿纸法。
+输出句式：
+打开备忘录，写下"关于[用户原话]"，然后随意打出3个与任务略有关联的词。
+
+示例：
+用户输入：提升自己的数据分析能力
+输出：打开备忘录，写下"关于数据分析"，然后打出平均值、Excel、基础。
+
+# 万能保底
+如果你无法判断类型，一律输出：
+打开备忘录，写下"关于[用户原话]的第一念"，然后随便打5个字。
+
+# 输出格式
+只输出一句话。
+40字以内。
+不要引号。
+不要加粗。
+不要换行。
+不要编号。
+除了句号，不要使用多余标点。
+`.trim();
+
+    // ============================================
+    // DOM refs
+    // ============================================
+    const $ = id => document.getElementById(id);
+    const views = document.querySelectorAll('.view');
+    const taskInput = $('taskInput');
+    const charCount = $('charCount');
+    const btnGetAction = $('btnGetAction');
+    const actionText = $('actionText');
+    const actionTask = $('actionTask');
+    const timerMin = $('timerMin');
+    const timerSec = $('timerSec');
+    const timerDisplay = $('timerDisplay');
+    const timerBar = $('timerBar');
+    const timerStatus = $('timerStatus');
+    const btnStartTimer = $('btnStartTimer');
+    const btnDoneEarly = $('btnDoneEarly');
+    const feedbackNote = $('feedbackNote');
+    const feedbackError = $('feedbackError');
+    const btnSubmit = $('btnSubmitFeedback');
+    const summaryBox = $('summaryBox');
+    const btnTryAgain = $('btnTryAgain');
+    const btnExport = $('btnExportCSV');
+    const historyToggle = $('historyToggle');
+    const historyList = $('historyList');
+    const historyBadge = $('historyBadge');
+
+    // ============================================
+    // View navigation
+    // ============================================
+    function showView(id) {
+      views.forEach(v => v.classList.remove('active'));
+      const target = document.getElementById('view-' + id);
+      if (target) target.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ============================================
+    // Mock AI — keyword-based action generation
+    // ============================================
+    function generateAction(task) {
+      const lower = task.toLowerCase();
+
+      // ==== 分类 + 对象提取 + 模板 ====
+      function classify(task, lower) {
+        // 边缘情况 1: 高情绪阻力沟通（优先判断）
+        const highEmotionWords = ['拖延很久', '不敢联系', '愧疚', '害怕', '尴尬', '客户', '老板', '前任', '道歉', '催', '报价单'];
+        if (highEmotionWords.some(w => lower.includes(w))) return 'high_emotion';
+
+        // 边缘情况 2: 抽象目标类
+        const abstractWords = ['提升自己', '找灵感', '人生方向', '做副业', '变好', '变自律', '改变现状', '迷茫', '方向', '成长', '自律', '改进'];
+        if (abstractWords.some(w => lower.includes(w))) return 'abstract';
+
+        // 身体行动类
+        const bodyWords = ['跑步', '锻炼', '健身', '瑜伽', '冥想', '跳舞', '散步', '拉伸', '运动', '健身'];
+        if (bodyWords.some(w => lower.includes(w))) return 'body';
+
+        // 学习输入类
+        const learnWords = ['看书', '学习', '背单词', '学英语', '读资料', '阅读', '看论文', '学python', '学编程', '上课', '听课', '读书'];
+        if (learnWords.some(w => lower.includes(w))) return 'learn';
+
+        // 空白创造类
+        const createWords = ['写', '画', '设计', '码代码', '做ppt', '做方案', '写文案', '写报告', '做海报', '剪视频', '写论文', '作品集', '做幻灯片', '做视频', '文案', '写稿', '写代码', '做图', '做设计'];
+        if (createWords.some(w => lower.includes(w))) return 'create';
+
+        // 物理整理类
+        const organizeWords = ['收拾', '打扫', '搬家', '整理', '清理', '归档', '洗衣服', '刷碗', '发票', '文件夹', '储物', '归置', '清洁'];
+        if (organizeWords.some(w => lower.includes(w))) return 'organize';
+
+        // 沟通类
+        const commWords = ['联系', '汇报', '发邮件', '发消息', '打电话', '找客户', '问人', '回复', '通知', '沟通', '回消息', '发微信'];
+        if (commWords.some(w => lower.includes(w))) return 'comm';
+
+        return 'unknown';
+      }
+
+      function extractObject(task) {
+        // Try to extract the main noun/topic after action verbs
+        const patterns = [
+          /[写做画设计准备开始整理学习看读背跑锻炼]+[的着了]?[：: ]?(.{1,20})$/,
+          /(?:关于|用|把|给|找)[的着了]?(.{1,15})/,
+        ];
+        for (const p of patterns) {
+          const m = task.match(p);
+          if (m) return m[1].trim();
+        }
+        return task.replace(/^[我你他她它]+\s*[想要不要准备开始]+/, '').trim().slice(0, 12);
+      }
+
+      const type = classify(task, lower);
+      const obj = extractObject(task) || '这件事';
+
+      // 应用模板
+      switch (type) {
+        case 'high_emotion': {
+          const tool = (lower.includes('邮箱') || lower.includes('邮件') || lower.includes('mail') || lower.includes('报价')) ? '邮箱' : '聊天窗口';
+          return `打开${tool}，只输对方名字首字母，停止3秒`;
+        }
+        case 'abstract': {
+          return `打开备忘录，写下关于${obj}，然后打出3个词`;
+        }
+        case 'body': {
+          if (lower.includes('跑步') || lower.includes('跑')) return '找出跑鞋，系上左脚鞋带';
+          if (lower.includes('瑜伽')) return '铺开瑜伽垫，站到垫子边缘';
+          if (lower.includes('冥想')) return '坐下闭眼，只做三次深呼吸';
+          if (lower.includes('健身') || lower.includes('锻炼')) return '换上运动服，站起来伸懒腰';
+          if (lower.includes('散步')) return '穿上鞋，推开门走出去';
+          return '找出运动装备，让身体接触它';
+        }
+        case 'learn': {
+          if (lower.includes('学英语') || lower.includes('背单词')) return '打开单词App，只看第一个单词';
+          if (lower.includes('阅读') || lower.includes('看书') || lower.includes('读书') || lower.includes('书')) return '翻开书，用手指触摸第一行字';
+          if (lower.includes('学python') || lower.includes('学编程') || lower.includes('学代码')) return '打开教程，只看第一段标题';
+          return '翻开资料，只触摸第一页';
+        }
+        case 'create': {
+          if (lower.includes('ppt') || lower.includes('幻灯片')) return '打开PPT，只打出标题页日期';
+          if (lower.includes('海报') || lower.includes('设计')) return '打开设计软件，新建空白画布';
+          if (lower.includes('代码') || lower.includes('编程') || lower.includes('码')) return '打开编辑器，新建空文件';
+          if (lower.includes('视频') || lower.includes('剪')) return '打开剪辑软件，拖入第一段素材';
+          if (lower.includes('论文') || lower.includes('作品集')) return `打开文档，只打出${obj.slice(0, 8)}作为标题`;
+          return `打开文档，只打出${obj.slice(0, 6)}三字`;
+        }
+        case 'organize': {
+          if (lower.includes('发票') || lower.includes('文件')) return '拿出一个文件夹，只放进一张发票';
+          if (lower.includes('下载') || lower.includes('电脑')) return '打开下载文件夹，只选中第一个文件';
+          if (lower.includes('衣柜') || lower.includes('衣服') || lower.includes('衣')) return '打开衣柜，只把一件衣服挂好';
+          if (lower.includes('厨房') || lower.includes('碗')) return '打开水龙头，只洗一个碗';
+          return '拿出一个袋子，只放一件物品进去';
+        }
+        case 'comm': {
+          if (lower.includes('邮件') || lower.includes('邮箱') || lower.includes('mail')) return '打开邮箱，标题只写初稿';
+          if (lower.includes('电话') || lower.includes('打')) return '拿起手机，只拨前三位号码';
+          if (lower.includes('消息') || lower.includes('微信') || lower.includes('聊天')) return '打开聊天窗口，只输入在吗';
+          return '打开沟通工具，只输入你好';
+        }
+        default: {
+          // 万能保底
+          return `打开备忘录，写下关于${obj}的第一念，然后随便打5个字`;
+        }
+      }
+    }
+
+    // ============================================
+    // validateAction — 输出校验
+    // 所有 mock 和真实 AI 结果都必须经过此函数
+    // ============================================
+    const PHYSICAL_ACTION_WORDS = ['打开', '拿出', '触摸', '按下', '写下', '写出', '打出', '输入', '放进', '系上', '翻到', '找出', '右键', '点开', '移动'];
+    const FORBIDDEN_WORDS = ['分析', '规划', '拆解', '构思', '列出', '梳理', '评估', '思考', '研究', '复盘', '总结', '步骤', '首先', '建议', '计划'];
+    // 过大任务动作：完成、做完、整理所有、全部、所有资料、所有文件、整个
+    const OVERSCALE_PATTERNS = [/完成/, /做完/, /整理所有/, /全部/, /整个/, /所有资料/, /所有文件/];
+
+    function validateAction(action, task) {
+      // 规则 1: 禁用词
+      for (const word of FORBIDDEN_WORDS) {
+        if (action.includes(word)) {
+          return { valid: false, reason: '禁用词', fallback: fallbackAction(task) };
+        }
+      }
+
+      // 规则 2: 超过 60 字符
+      const cleanLen = action.replace(/[\s，。、；：！？""''（）【】《》—…·,.;:!?'"()\[\]{}<>-]/g, '').length;
+      if (cleanLen > 60) {
+        return { valid: false, reason: '超长', fallback: fallbackAction(task) };
+      }
+
+      // 规则 3: 换行
+      if (action.includes('\n') || action.includes('\r')) {
+        return { valid: false, reason: '换行', fallback: fallbackAction(task) };
+      }
+
+      // 规则 4: 编号列表
+      if (/[0-9①②③④⑤⑥⑦⑧⑨⑩]/.test(action) && /[.、.)）]/.test(action)) {
+        if (/^[\s]*[0-9①-⑩a-zA-Z][.、.)）]/.test(action) || /[，;；]\s*[0-9①-⑩a-zA-Z][.、.)）]/.test(action)) {
+          return { valid: false, reason: '编号列表', fallback: fallbackAction(task) };
+        }
+      }
+
+      // 规则 5: 必须包含至少一个物理动作词
+      const hasActionWord = PHYSICAL_ACTION_WORDS.some(w => action.includes(w));
+      if (!hasActionWord) {
+        return { valid: false, reason: '缺少动作词', fallback: fallbackAction(task) };
+      }
+
+      // 规则 6: 禁止过大任务动作
+      for (const pattern of OVERSCALE_PATTERNS) {
+        if (pattern.test(action)) {
+          return { valid: false, reason: '动作过大', fallback: fallbackAction(task) };
+        }
+      }
+
+      return { valid: true, action };
+    }
+
+    function fallbackAction(task) {
+      const shortTask = task.replace(/^用户目标：/, '').slice(0, 10);
+      return `打开备忘录，写下关于${shortTask}的第一念，然后随便打5个字`;
+    }
+
+    // ============================================
+    // 调用后端 API 生成启动动作
+    // ============================================
+    async function generateStartAction() {
+      currentTask = taskInput.value.trim();
+      currentTools = document.getElementById('toolsInput').value.trim();
+      if (currentTask.length < 3) return;
+
+      showView('loading');
+
+      // 构建发送给 AI 的提示（含常用条件信息）
+      let aiTask;
+      if (currentTools) {
+        aiTask = `用户目标：${currentTask}\n常用条件：${currentTools}\n\n请围绕常用条件生成第一步动作。`;
+      } else {
+        aiTask = `用户目标：${currentTask}\n常用条件：无`;
+      }
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
+        const res = await fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: aiTask, tools: currentTools }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const data = await res.json();
+
+        // 后端 always 200 with { action, source, warning? }
+        if (!data.action) {
+          throw new Error('返回数据异常');
+        }
+
+        // 校验输出
+        const validation = validateAction(data.action, currentTask);
+        currentAction = validation.valid ? validation.action : validation.fallback;
+        actionText.textContent = currentAction;
+        actionTask.textContent = '「' + currentTask + '」';
+
+        // 如果是 fallback，显示提示文字
+        let warningEl = document.getElementById('fallback-warning');
+        if (data.source === 'fallback' || data.warning) {
+          if (!warningEl) {
+            warningEl = document.createElement('p');
+            warningEl.id = 'fallback-warning';
+            warningEl.style.cssText = 'font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 8px;';
+            document.querySelector('#view-action .action-display').after(warningEl);
+          }
+          warningEl.textContent = data.warning || '已使用本地保底动作';
+        } else if (warningEl) {
+          warningEl.remove();
+        }
+
+        resetTimer();
+        showView('action');
+
+      } catch (err) {
+        console.error('generateStartAction 错误:', err);
+        // 网络级失败（fetch 本身失败）→ 前端直接本地保底
+        let localAction = null;
+        try {
+          const localAttempt = generateAction(currentTask);
+          const localCheck = validateAction(localAttempt, currentTask);
+          if (localCheck.valid) localAction = localCheck.action;
+        } catch (_) {}
+        currentAction = localAction || `打开备忘录，写下关于${currentTask.slice(0, 10)}的第一念。`;
+        actionText.textContent = currentAction;
+        actionTask.textContent = '「' + currentTask + '」';
+        resetTimer();
+        showView('action');
+      }
+    }
+
+    // ============================================
+    // Timer
+    // ============================================
+    function resetTimer() {
+      stopTimer();
+      timerSeconds = 120;
+      timerElapsed = 0;
+      timerRunning = false;
+      timerCompleted = false;
+      updateTimerDisplay();
+      timerBar.style.width = '100%';
+      timerBar.classList.remove('done');
+      timerDisplay.classList.remove('running', 'done');
+      timerStatus.textContent = '准备就绪';
+      btnStartTimer.textContent = '开始 2 分钟';
+      btnStartTimer.disabled = false;
+      btnDoneEarly.disabled = true;
+    }
+
+    function updateTimerDisplay() {
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const s = String(timerSeconds % 60).padStart(2, '0');
+      timerMin.textContent = m;
+      timerSec.textContent = s;
+      const pct = (timerSeconds / 120) * 100;
+      timerBar.style.width = pct + '%';
+    }
+
+    function startTimer() {
+      if (timerRunning || timerCompleted) return;
+      timerRunning = true;
+      timerDisplay.classList.add('running');
+      btnStartTimer.textContent = '执行中…';
+      btnStartTimer.disabled = true;
+      btnDoneEarly.disabled = false;
+      timerStatus.textContent = '正在执行…';
+
+      timerInterval = setInterval(() => {
+        timerSeconds--;
+        timerElapsed++;
+        updateTimerDisplay();
+        if (timerSeconds <= 0) {
+          completeTimer();
+        }
+      }, 1000);
+    }
+
+    function completeTimer() {
+      stopTimer();
+      timerRunning = false;
+      timerCompleted = true;
+      timerDisplay.classList.remove('running');
+      timerDisplay.classList.add('done');
+      timerBar.classList.add('done');
+      btnStartTimer.textContent = '填写反馈 →';
+      btnStartTimer.disabled = false;
+      btnDoneEarly.disabled = true;
+      timerStatus.textContent = '时间到！';
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function doneEarly() {
+      if (!timerRunning) return;
+      stopTimer();
+      timerCompleted = true;
+      timerRunning = false;
+      timerDisplay.classList.remove('running');
+      timerDisplay.classList.add('done');
+      timerBar.classList.add('done');
+      btnStartTimer.textContent = '填写反馈 →';
+      btnStartTimer.disabled = false;
+      btnDoneEarly.disabled = true;
+      timerStatus.textContent = '你提前完成了！';
+    }
+
+    // ============================================
+    // Feedback
+    // ============================================
+    function collectFeedback() {
+      const q1 = document.querySelector('input[name="q1"]:checked');
+      const q2 = document.querySelector('input[name="q2"]:checked');
+      const q3 = document.querySelector('input[name="q3"]:checked');
+      if (!q1 || !q2 || !q3) {
+        feedbackError.classList.add('show');
+        return null;
+      }
+      feedbackError.classList.remove('show');
+      return {
+        completed: q1.value,
+        stateAfterAction: q2.value,
+        wouldStartWithoutPrompt: q3.value,
+        openFeedback: feedbackNote.value.trim()
+      };
+    }
+
+    // ============================================
+    // localStorage
+    // ============================================
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function saveToHistory(data) {
+      const entry = {
+        task: currentTask,
+        action: currentAction,
+        durationSeconds: timerElapsed,
+        createdAt: new Date().toISOString(),
+        ...data
+      };
+      history.unshift(entry);
+      if (history.length > 50) history.pop();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+      renderHistory();
+    }
+
+    // ============================================
+    // Summary / Thanks
+    // ============================================
+    function showThanks(fb) {
+      const qLabels = {
+        completed: '执行情况', stateAfterAction: '执行后状态', wouldStartWithoutPrompt: '无提示是否会开始'
+      };
+      const elapsedStr = timerElapsed < 60
+        ? timerElapsed + ' 秒'
+        : Math.floor(timerElapsed / 60) + ' 分 ' + (timerElapsed % 60) + ' 秒';
+
+      summaryBox.innerHTML = `
+        <div class="summary-row">
+          <span class="summary-label">拖延任务</span>
+          <span class="summary-value">${escHtml(currentTask)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">启动动作</span>
+          <span class="summary-value">${escHtml(currentAction)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">执行时长</span>
+          <span class="summary-value">${elapsedStr}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">${qLabels.completed}</span>
+          <span class="summary-value">${escHtml(fb.completed)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">${qLabels.stateAfterAction}</span>
+          <span class="summary-value">${escHtml(fb.stateAfterAction)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">${qLabels.wouldStartWithoutPrompt}</span>
+          <span class="summary-value">${escHtml(fb.wouldStartWithoutPrompt)}</span>
+        </div>
+        ${fb.openFeedback ? `
+        <div class="summary-row">
+          <span class="summary-label">补充</span>
+          <span class="summary-value">${escHtml(fb.openFeedback)}</span>
+        </div>` : ''}
+      `;
+
+      showView('thanks');
+    }
+
+    function escHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    // ============================================
+    // CSV Export
+    // ============================================
+    function exportCSV() {
+      if (history.length === 0) return;
+      const headers = ['createdAt', 'task', 'action', 'durationSeconds', 'completed', 'stateAfterAction', 'wouldStartWithoutPrompt', 'openFeedback'];
+      const rows = history.map(e => [
+        e.createdAt,
+        e.task,
+        e.action,
+        e.durationSeconds,
+        e.completed,
+        e.stateAfterAction,
+        e.wouldStartWithoutPrompt,
+        e.openFeedback || ''
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+
+      const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'startflow-实验记录.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ============================================
+    // History render
+    // ============================================
+    function renderHistory() {
+      historyBadge.textContent = history.length;
+      if (history.length === 0) {
+        historyList.innerHTML = '<p class="history-list empty">还没有实验记录</p>';
+        return;
+      }
+      historyList.innerHTML = history.map(e => {
+        const d = new Date(e.createdAt);
+        const timeStr = (d.getMonth()+1) + '/' + d.getDate() + ' ' +
+          String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+        return `<div class="history-item">
+          <div class="hi-header">
+            <span class="hi-task">${escHtml(e.task)}</span>
+          </div>
+          <div class="hi-action">→ ${escHtml(e.action)}</div>
+          <div class="hi-meta">${timeStr} · 执行: ${escHtml(e.completed)}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ============================================
+    // Reset for new experiment
+    // ============================================
+    function resetAll() {
+      taskInput.value = '';
+      charCount.textContent = '0';
+      document.getElementById('toolsInput').value = '';
+      currentTools = '';
+      btnGetAction.disabled = true;
+      feedbackNote.value = '';
+      feedbackError.classList.remove('show');
+      document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+      document.querySelectorAll('.option.selected').forEach(el => el.classList.remove('selected'));
+      stopTimer();
+      resetTimer();
+      showView('input');
+    }
+
+    // ============================================
+    // Event listeners
+    // ============================================
+
+    // Input
+    taskInput.addEventListener('input', () => {
+      const len = taskInput.value.length;
+      charCount.textContent = len;
+      btnGetAction.disabled = len < 3;
+    });
+    taskInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && !btnGetAction.disabled) {
+        e.preventDefault();
+        generateStartAction();
+      }
+    });
+    btnGetAction.addEventListener('click', generateStartAction);
+
+    // Timer
+    btnStartTimer.addEventListener('click', () => {
+      if (timerCompleted) {
+        showView('feedback');
+        return;
+      }
+      if (!timerRunning) startTimer();
+    });
+    btnDoneEarly.addEventListener('click', doneEarly);
+
+    // Options (radio click → highlight)
+    document.querySelectorAll('.options .option').forEach(opt => {
+      opt.addEventListener('click', function(e) {
+        const radio = this.querySelector('input[type="radio"]');
+        if (!radio) return;
+        radio.checked = true;
+        const group = this.closest('.options');
+        group.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        this.classList.add('selected');
+      });
+    });
+    // Also handle native radio change events (for accessibility / keyboard nav)
+    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const label = this.closest('.option');
+        if (!label) return;
+        const group = label.closest('.options');
+        group.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        label.classList.add('selected');
+      });
+    });
+
+    // Submit feedback
+    btnSubmit.addEventListener('click', () => {
+      const fb = collectFeedback();
+      if (!fb) return;
+      saveToHistory(fb);
+      showThanks(fb);
+    });
+
+    // Try again
+    btnTryAgain.addEventListener('click', resetAll);
+
+    // CSV export
+    btnExport.addEventListener('click', exportCSV);
+
+    // History toggle
+    historyToggle.addEventListener('click', () => {
+      const isHidden = historyList.style.display === 'none';
+      historyList.style.display = isHidden ? 'block' : 'none';
+    });
+
+    // ============================================
+    // Init
+    // ============================================
+    history = loadHistory();
+    renderHistory();
+    showView('input');
+
+  })();
+  </script>
+</body>
+</html>
