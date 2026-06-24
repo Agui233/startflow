@@ -59,6 +59,7 @@ module.exports = async (req, res) => {
             wouldStartWithoutPrompt,
             openFeedback: openFeedback || '',
             durationSeconds: durationSeconds || 0,
+            createdAt: Date.now(),
           }
         }),
         signal: AbortSignal.timeout(8000),
