@@ -192,6 +192,14 @@
     .loading-text { font-size: 15px; color: var(--text-secondary); }
 
     /* === VIEW 3: Action + Timer === */
+    .action-motivation {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 16px;
+      line-height: 1.6;
+      font-style: italic;
+    }
     .action-display {
       background: rgba(255,255,255,0.5);
       border: 1px solid var(--border);
@@ -467,6 +475,7 @@
     <!-- ===== VIEW 3: 动作 + 计时 ===== -->
     <section class="view" id="view-action">
       <div class="card">
+        <p class="action-motivation">这一步可能简单到离谱。别想太多，动一下手指就好。</p>
         <div class="action-display">
           <div class="action-label">最小启动动作</div>
           <p class="action-text" id="actionText"></p>
