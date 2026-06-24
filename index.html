@@ -1277,6 +1277,18 @@
       if (!fb) return;
       saveToHistory(fb);
       showThanks(fb);
+      // 异步发送到飞书后端（不阻塞用户）
+      fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task: currentTask,
+          action: currentAction,
+          durationSeconds: timerElapsed,
+          createdAt: new Date().toISOString(),
+          ...fb
+        })
+      }).catch(e => console.error('feedback send failed:', e));
     });
 
     // Try again
