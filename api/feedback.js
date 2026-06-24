@@ -29,22 +29,19 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // 异步写入飞书（不阻塞响应）
-    const writePromise = (async () => {
-      try {
-        const tokenResp = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ app_id: FEISHU_APP_ID, app_secret: FEISHU_APP_SECRET }),
-        });
-        const tokenData = await tokenResp.json();
-        const token = tokenData.tenant_access_token;
+    // 同步写入飞书（带 8 秒超时）
+    let saved = false;
+    try {
+      const tokenResp = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app_id: FEISHU_APP_ID, app_secret: FEISHU_APP_SECRET }),
+        signal: AbortSignal.timeout(8000),
+      });
+      const tokenData = await tokenResp.json();
+      const token = tokenData.tenant_access_token;
 
-        if (!token) {
-          console.error('获取飞书 token 失败:', tokenData);
-          return;
-        }
-
+      if (token) {
         const writeResp = await fetch(
           `https://open.feishu.cn/open-apis/bitable/v1/apps/${BASE_TOKEN}/tables/${TABLE_ID}/records`,
           {
@@ -65,21 +62,20 @@ module.exports = async (req, res) => {
                 createdAt: createdAt || new Date().toISOString(),
               }
             }),
+            signal: AbortSignal.timeout(8000),
           }
         );
         const writeData = await writeResp.json();
-        if (writeData.code !== 0) {
-          console.error('飞书写入失败:', JSON.stringify(writeData));
-        } else {
-          console.log('飞书写入成功');
-        }
-      } catch (err) {
-        console.error('飞书写入异常:', err.message);
+        saved = writeData.code === 0;
+        if (!saved) console.error('飞书写入失败:', JSON.stringify(writeData));
+      } else {
+        console.error('飞书 token 获取失败:', tokenData);
       }
-    })();
+    } catch (err) {
+      console.error('飞书写入异常:', err.message);
+    }
 
-    // 立即返回成功，不等待飞书写入
-    res.status(200).json({ saved: true });
+    res.status(200).json({ saved });
 
   } catch (err) {
     console.error('feedback 处理异常:', err);
