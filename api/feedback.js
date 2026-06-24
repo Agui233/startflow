@@ -54,9 +54,9 @@ module.exports = async (req, res) => {
           fields: {
             task,
             action: action || '',
-            completed,
-            stateAfterAction,
-            wouldStartWithoutPrompt,
+            completed: [completed],
+            stateAfterAction: [stateAfterAction],
+            wouldStartWithoutPrompt: [wouldStartWithoutPrompt],
             openFeedback: openFeedback || '',
             durationSeconds: durationSeconds || 0,
             createdAt: createdAt || new Date().toISOString(),
