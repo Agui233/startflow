@@ -169,7 +169,7 @@
     }
     .btn-ghost:hover { background: rgba(0,0,0,0.08); color: var(--text-primary); }
 
-    .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
     .btn-group.row { flex-direction: row; }
     .btn-group.row .btn { flex: 1; }
 
@@ -193,84 +193,144 @@
 
     /* === VIEW 3: Action + Timer === */
     .action-motivation {
-      font-size: 13px;
-      color: var(--text-muted);
+      margin: 0 auto 14px;
+      max-width: 820px;
+      text-align: center;
+      color: #8d8d8d;
+      font-size: 16px;
+      font-weight: 650;
+      font-style: italic;
+      line-height: 1.55;
+    }
+    .action-display {
+      background: rgba(255,255,255,0.42);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 14px;
+      padding: 22px 30px 20px;
       text-align: center;
       margin-bottom: 16px;
-      line-height: 1.6;
-      font-style: italic;
+    }
+    .action-display .action-label {
+      font-size: 15px;
+      color: #9a9a9a;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
     }
     .action-steps {
-      margin: 16px 0;
+      display: grid;
+      gap: 8px;
+      margin: 0;
       text-align: left;
     }
     .action-step-item {
-      display: flex;
-      align-items: flex-start;
+      display: grid;
+      grid-template-columns: 34px 1fr;
       gap: 10px;
-      padding: 8px 12px;
-      margin-bottom: 4px;
-      background: rgba(255,255,255,0.4);
-      border-radius: 8px;
-      font-size: 15px;
-      line-height: 1.6;
+      align-items: center;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.46);
+      text-align: left;
     }
     .action-step-num {
-      flex-shrink: 0;
-      width: 22px;
-      height: 22px;
-      background: var(--color-primary);
-      color: #fff;
-      border-radius: 50%;
-      display: flex;
+      width: 34px;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      margin-top: 2px;
+      color: rgba(255,104,104,0.34);
+      font-size: 16px;
+      font-weight: 800;
     }
     .action-step-text {
-      flex: 1;
-      color: var(--text-primary);
-    }
-    .action-display {
-      background: rgba(255,255,255,0.5);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 24px 20px;
-      text-align: center;
-      margin-bottom: 24px;
-    }
-    .action-display .action-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-    }
-    .action-display .action-text {
-      font-size: 20px;
-      font-weight: 600;
-      line-height: 1.5;
-      color: var(--text-primary);
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: #202020;
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 520;
     }
     .action-display .action-task {
-      font-size: 13px;
-      color: var(--text-secondary);
-      margin-top: 10px;
+      font-size: 15px;
+      color: #7d7d7d;
+      margin-top: 16px;
       font-style: italic;
+    }
+    .refine-panel {
+      margin: -4px 0 14px;
+      text-align: center;
+    }
+    .refine-toggle {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      cursor: pointer;
+      padding: 8px 10px;
+    }
+    .refine-toggle:hover { color: var(--text-primary); }
+    .refine-box {
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.42);
+      text-align: left;
+    }
+    .refine-box label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .refine-box textarea {
+      min-height: 58px;
+      resize: none;
+      margin-bottom: 10px;
+    }
+    .refine-box .btn { padding: 10px 16px; }
+
+    .debug-panel {
+      display: none;
+      margin: -6px 0 16px;
+      padding: 12px;
+      border: 1px dashed rgba(0,0,0,0.18);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.38);
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-align: left;
+    }
+    .debug-panel.show { display: block; }
+    .debug-panel summary { cursor: pointer; color: var(--text-primary); font-weight: 650; }
+    .debug-grid { display: grid; gap: 8px; margin-top: 10px; }
+    .debug-row strong { display: block; color: var(--text-muted); font-size: 11px; margin-bottom: 3px; }
+    .debug-row pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin: 0;
+      padding: 8px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.6);
+      color: var(--text-primary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.45;
     }
 
     /* Timer */
-    .timer-section { text-align: center; margin-bottom: 24px; }
+    .timer-section { text-align: center; margin-bottom: 16px; }
     .timer-display {
-      font-size: 64px;
+      font-size: 54px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       letter-spacing: 3px;
       color: var(--text-primary);
       line-height: 1;
-      margin: 16px 0 12px;
+      margin: 10px 0 10px;
     }
     .timer-display.running {
       color: var(--btn-primary);
@@ -302,7 +362,7 @@
       transition: width 1s linear;
     }
     .timer-progress-bar.done { background: #5cb85c; }
-    .timer-status { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; }
+    .timer-status { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
 
     /* === VIEW 4: Feedback === */
     .question-block { margin-bottom: 24px; }
@@ -465,9 +525,20 @@
        ============================================ */
     @media (max-width: 480px) {
       .app { padding: 20px 16px 40px; }
-      .card { padding: 24px 18px; }
-      .timer-display { font-size: 48px; }
-      .action-display .action-text { font-size: 17px; }
+      .card { padding: 20px 16px; }
+      .timer-display { font-size: 42px; margin: 8px 0; }
+      .timer-section { margin-bottom: 14px; }
+      .action-motivation { font-size: 14px; line-height: 1.55; margin-bottom: 12px; }
+      .action-display { padding: 18px 12px 16px; border-radius: 12px; margin-bottom: 14px; }
+      .action-display .action-label { font-size: 13px; margin-bottom: 14px; }
+      .action-steps { gap: 7px; }
+      .action-step-item { grid-template-columns: 26px 1fr; padding: 9px 9px; gap: 7px; border-radius: 10px; }
+      .action-step-num { width: 26px; font-size: 13px; }
+      .action-step-text { font-size: 16px; line-height: 1.32; }
+      .action-display .action-task { font-size: 13px; margin-top: 14px; }
+      .refine-panel { margin-bottom: 12px; }
+      .refine-box { padding: 10px; }
+      .refine-box textarea { min-height: 54px; }
       .option { padding: 8px 12px; font-size: 13px; }
     }
   </style>
@@ -484,14 +555,14 @@
     <!-- ===== VIEW 1: 输入 ===== -->
     <section class="view view-input active" id="view-input">
       <div class="card">
-        <h2>今天想开始什么？</h2>
-        <p class="desc">说一件你今天想开始，但还没有行动的事。</p>
+        <h2>哪件事你想开始，但还没启动？</h2>
+        <p class="desc">不用解释原因，只写下那件事就好。</p>
         <div class="textarea-wrap">
-          <textarea id="taskInput" rows="4" maxlength="200" placeholder="例如：整理一下工作桌面、写今天的周报片段…"></textarea>
+          <textarea id="taskInput" rows="4" maxlength="200" placeholder="比如：写周报、学英语、整理材料、收拾行李"></textarea>
           <span class="char-count"><span id="charCount">0</span>/200</span>
         </div>
-        <div class="textarea-wrap" style="margin-bottom: 12px;">
-          <textarea id="toolsInput" rows="3" maxlength="200" placeholder="你通常会用什么材料、工具或环境来做这件事？（选填）&#10;例如：新概念英语4、Notion、手机备忘录、Excel、家里的瑜伽垫、健身房" style="min-height: 68px; resize: none;"></textarea>
+        <div class="textarea-wrap sr-only-tools" style="display:none; margin-bottom: 12px;">
+          <textarea id="toolsInput" rows="3" maxlength="200"></textarea>
         </div>
         <button class="btn btn-primary" id="btnGetAction" disabled>获取我的启动链</button>
       </div>
@@ -501,7 +572,7 @@
     <section class="view view-loading" id="view-loading">
       <div class="card" style="background:transparent;backdrop-filter:none;border:none;padding:40px 0;">
         <div class="loading-spinner"></div>
-        <p class="loading-text">正在生成你的启动动作…</p>
+        <p class="loading-text">正在生成你的启动链…</p>
       </div>
     </section>
 
@@ -514,6 +585,20 @@
           <div class="action-steps" id="actionSteps"></div>
           <p class="action-task" id="actionTask"></p>
         </div>
+
+        <div class="refine-panel" id="refinePanel">
+          <button class="refine-toggle" id="btnRefineToggle" type="button">换一个更贴近我的方式</button>
+          <div class="refine-box" id="refineBox" style="display:none;">
+            <label for="preferenceInput">哪里不贴近你现在的情况？</label>
+            <textarea id="preferenceInput" rows="2" maxlength="180" placeholder="比如：我已经写了一半，但不知道怎么继续 / 我习惯先列框架 / 我现在只有手机 / 我想先找旧文件改"></textarea>
+            <button class="btn btn-ghost" id="btnRegenerate" type="button">重新生成启动链</button>
+          </div>
+        </div>
+
+        <details class="debug-panel" id="debugPanel">
+          <summary>生成诊断</summary>
+          <div class="debug-grid" id="debugContent"></div>
+        </details>
 
         <!-- Timer -->
         <div class="timer-section">
@@ -537,51 +622,52 @@
     <section class="view" id="view-feedback">
       <div class="card">
         <h2>实验反馈</h2>
-        <p class="desc">回答几个问题，验证这个启动动作是否有效。</p>
+        <p class="desc">帮我们判断这条启动链是否真的降低了开始阻力。</p>
 
         <div class="question-block">
-          <span class="q-label">Q1. 刚才那 2 分钟，你执行了这个动作吗？<span class="q-required">*</span></span>
+          <span class="q-label">Q1. 你刚才执行到哪一步？<span class="q-required">*</span></span>
           <div class="options" data-question="q1">
-            <label class="option"><input type="radio" name="q1" value="完全没执行"><span class="option-text">完全没执行</span></label>
-            <label class="option"><input type="radio" name="q1" value="执行了一部分"><span class="option-text">执行了一部分</span></label>
-            <label class="option"><input type="radio" name="q1" value="完整执行了"><span class="option-text">完整执行了</span></label>
-            <label class="option"><input type="radio" name="q1" value="执行后还多做了"><span class="option-text">执行后还多做了</span></label>
+            <label class="option"><input type="radio" name="q1" value="完全没开始"><span class="option-text">完全没开始</span></label>
+            <label class="option"><input type="radio" name="q1" value="只做了第 1 步"><span class="option-text">只做了第 1 步</span></label>
+            <label class="option"><input type="radio" name="q1" value="做到了第 2 步"><span class="option-text">做到了第 2 步</span></label>
+            <label class="option"><input type="radio" name="q1" value="3 步都做完了"><span class="option-text">3 步都做完了</span></label>
+            <label class="option"><input type="radio" name="q1" value="做完后还继续做了"><span class="option-text">做完后还继续做了</span></label>
           </div>
         </div>
 
         <div class="question-block">
-          <span class="q-label">Q2. 执行完这个动作后，你的状态是？<span class="q-required">*</span></span>
+          <span class="q-label">Q2. 这 3 个动作和你要开始的事贴合吗？<span class="q-required">*</span></span>
           <div class="options" data-question="q2">
-            <label class="option"><input type="radio" name="q2" value="依然不想做"><span class="option-text">依然不想做</span></label>
-            <label class="option"><input type="radio" name="q2" value="有点想继续了"><span class="option-text">有点想继续了</span></label>
-            <label class="option"><input type="radio" name="q2" value="已经顺其自然地继续了"><span class="option-text">已经顺其自然地继续了</span></label>
-            <label class="option"><input type="radio" name="q2" value="停不下来，进入了心流"><span class="option-text">停不下来，进入了心流</span></label>
+            <label class="option"><input type="radio" name="q2" value="很贴合"><span class="option-text">很贴合</span></label>
+            <label class="option"><input type="radio" name="q2" value="基本贴合"><span class="option-text">基本贴合</span></label>
+            <label class="option"><input type="radio" name="q2" value="有点偏"><span class="option-text">有点偏</span></label>
+            <label class="option"><input type="radio" name="q2" value="完全不相关"><span class="option-text">完全不相关</span></label>
           </div>
         </div>
 
         <div class="question-block">
-          <span class="q-label">Q3. 如果没有这个提示，你接下来会开始吗？<span class="q-required">*</span></span>
+          <span class="q-label">Q3. 做完之后，你的启动阻力变了吗？<span class="q-required">*</span></span>
           <div class="options" data-question="q3">
-            <label class="option"><input type="radio" name="q3" value="肯定不会"><span class="option-text">肯定不会</span></label>
-            <label class="option"><input type="radio" name="q3" value="可能不会"><span class="option-text">可能不会</span></label>
-            <label class="option"><input type="radio" name="q3" value="也许会"><span class="option-text">也许会</span></label>
-            <label class="option"><input type="radio" name="q3" value="会的，而且会认真做"><span class="option-text">会的，而且会认真做</span></label>
+            <label class="option"><input type="radio" name="q3" value="明显降低了"><span class="option-text">明显降低了</span></label>
+            <label class="option"><input type="radio" name="q3" value="稍微降低了"><span class="option-text">稍微降低了</span></label>
+            <label class="option"><input type="radio" name="q3" value="没什么变化"><span class="option-text">没什么变化</span></label>
+            <label class="option"><input type="radio" name="q3" value="反而更抗拒了"><span class="option-text">反而更抗拒了</span></label>
           </div>
         </div>
 
         <div class="question-block">
-          <span class="q-label">Q4. 这 3 个动作对你来说感觉如何？<span class="q-required">*</span></span>
+          <span class="q-label">Q4. 如果没有 StartFlow，你现在会开始吗？<span class="q-required">*</span></span>
           <div class="options" data-question="q4">
-            <label class="option"><input type="radio" name="q4" value="太简单，但有用"><span class="option-text">太简单，但有用</span></label>
-            <label class="option"><input type="radio" name="q4" value="刚好"><span class="option-text">刚好</span></label>
-            <label class="option"><input type="radio" name="q4" value="还是有点多"><span class="option-text">还是有点多</span></label>
-            <label class="option"><input type="radio" name="q4" value="没有帮助"><span class="option-text">没有帮助</span></label>
+            <label class="option"><input type="radio" name="q4" value="肯定不会"><span class="option-text">肯定不会</span></label>
+            <label class="option"><input type="radio" name="q4" value="大概率不会"><span class="option-text">大概率不会</span></label>
+            <label class="option"><input type="radio" name="q4" value="可能会"><span class="option-text">可能会</span></label>
+            <label class="option"><input type="radio" name="q4" value="本来就会"><span class="option-text">本来就会</span></label>
           </div>
         </div>
 
         <div class="feedback-textarea">
-          <label>关于刚才的体验，你还有什么想说的吗？ <span class="hint">（选填）</span></label>
-          <textarea id="feedbackNote" rows="2" placeholder="任何感受、想法或建议…"></textarea>
+          <label>哪一步最有用，或哪里不贴合？ <span class="hint">（选填）</span></label>
+          <textarea id="feedbackNote" rows="2" placeholder="比如：第 3 步太像写任务了 / 它没有按我的习惯来 / 第 1 步让我真的打开了文件"></textarea>
         </div>
 
         <p class="feedback-error" id="feedbackError">请回答所有必答题后再提交。</p>
@@ -644,117 +730,8 @@
     const STORAGE_KEY = 'startflow_history';
 
     // ============================================
-    // SYSTEM_PROMPT — AI 行为启动发令枪
-    // 产品核心规则，不要改写
+    // AI rules live in server.js and api/generate.js
     // ============================================
-    const SYSTEM_PROMPT = `
-你是一个极致严格的"行为启动发令枪"。你的唯一任务是根据用户输入的任务，输出一个极简的物理启动动作。
-
-# 核心心法
-禁止出现"思考类"动词。
-不要帮用户分析任务，不要帮用户制定计划，不要解释原因。
-你的目标不是让用户完成任务，而是让用户的手指或身体先动起来。
-
-# 绝对禁忌
-1. 绝对禁止使用这些词：分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结。
-2. 绝对禁止输出计划、步骤列表、原因解释、心理建设建议。
-3. 绝对禁止输出任何前缀和后缀，例如"你的第一步是：""建议你""祝你成功"。
-4. 绝对禁止让用户完成完整任务。
-5. 绝对禁止输出超过一个动作链。
-
-# 强制动作词
-你必须优先使用这些身体或手指动作词：
-打开、拿出、触摸、按下、写下、写出、打出、输入、放进、系上、翻到、找出、右键、点开、移动。
-
-# 分类映射规则
-
-【空白创造类】
-触发词：写、画、设计、码代码、做PPT、做方案、写文案、写报告、做海报、剪视频
-规则：让用户打开具体软件或文档，只写标题、日期或文件名。
-输出句式：
-打开[具体软件或文档]，只打出[标题、日期或文件名]。
-
-示例：
-用户输入：写年终总结
-输出：打开文档，只打出"年终总结"四个字。
-
-用户输入：设计一张海报
-输出：打开设计软件，新建一个空白画布。
-
-【物理整理类】
-触发词：收拾、打扫、搬家、整理、清理、归档、洗衣服、刷碗
-规则：让用户拿出一个容器或工具，只处理一个最小单位物品。
-输出句式：
-拿出[一个容器或工具]，只把[1个最小单位物品]放进去。
-
-示例：
-用户输入：收拾衣柜
-输出：拿出一个袋子，只把地上的一件衣服放进去。
-
-用户输入：整理电脑桌面
-输出：右键桌面，新建一个文件夹，命名为"待归档"。
-
-【常规信息/沟通类】
-触发词：联系、汇报、发邮件、发消息、打电话、找客户、问人、回复
-规则：让用户打开沟通工具，只触碰输入框，不发送实质内容。
-输出句式：
-打开[沟通工具]，只在输入框打出[对方称呼或一句无意义开头]。
-
-示例：
-用户输入：发周报邮件
-输出：打开邮箱，标题只写"周报初稿"。
-
-用户输入：问同事项目进度
-输出：打开聊天窗口，只输入"在吗"。
-
-【身体/学习类】
-触发词：锻炼、看书、学英语、冥想、跑步、运动、学习、背单词、读书
-规则：让用户找出工具或材料，让身体接触它，只做一个惯性动作。
-输出句式：
-找出[工具或材料]，让身体触摸它，只做[1个无脑惯性动作]。
-
-示例：
-用户输入：去跑步
-输出：找出跑鞋，系上左脚鞋带。
-
-用户输入：看专业书
-输出：翻到第一页，用手指触摸第一行字。
-
-# 边缘情况
-
-【高情绪阻力沟通】
-如果用户任务包含：拖延很久、不敢联系、愧疚、害怕、尴尬、客户、老板、前任、道歉、催、报价单。
-规则：只允许触碰沟通通道，绝对禁止发送实质内容。
-输出句式：
-打开[沟通工具]，只输入[对方名字首字母或号码前3位]，然后停止，光标闪烁3秒。
-
-示例：
-用户输入：拖了三天没给客户发报价单
-输出：打开邮箱，只输入客户名字首字母，然后停止，光标闪烁3秒。
-
-【抽象/虚无任务】
-如果用户任务是：提升自己、找灵感、想人生方向、做副业、变好、变自律、改变现状，或无法归类。
-规则：使用智能废稿纸法。
-输出句式：
-打开备忘录，写下"关于[用户原话]"，然后随意打出3个与任务略有关联的词。
-
-示例：
-用户输入：提升自己的数据分析能力
-输出：打开备忘录，写下"关于数据分析"，然后打出平均值、Excel、基础。
-
-# 万能保底
-如果你无法判断类型，一律输出：
-打开备忘录，写下"关于[用户原话]的第一念"，然后随便打5个字。
-
-# 输出格式
-只输出一句话。
-40字以内。
-不要引号。
-不要加粗。
-不要换行。
-不要编号。
-除了句号，不要使用多余标点。
-`.trim();
 
     // ============================================
     // DOM refs
@@ -782,6 +759,10 @@
     const historyToggle = $('historyToggle');
     const historyList = $('historyList');
     const historyBadge = $('historyBadge');
+    const btnRefineToggle = $('btnRefineToggle');
+    const refineBox = $('refineBox');
+    const preferenceInput = $('preferenceInput');
+    const btnRegenerate = $('btnRegenerate');
 
     // ============================================
     // View navigation
@@ -794,155 +775,139 @@
     }
 
     // ============================================
-    // Mock AI — keyword-based action generation
+    // Local fallback + validation
     // ============================================
     function renderActions(actions) {
       const container = document.getElementById('actionSteps');
       if (!container) return;
       container.innerHTML = actions.map((a, i) =>
-        '<div class="action-step-item"><span class="action-step-num">' + (i+1) + '</span><span class="action-step-text">' + escHtml(a) + '</span></div>'
+        '<div class="action-step-item"><span class="action-step-num">' + (i + 1) + '.</span><span class="action-step-text">' + escHtml(a) + '</span></div>'
       ).join('');
     }
 
-    function generateAction(task) {
-      const lower = task.toLowerCase();
-
-      // ==== 分类 + 对象提取 + 模板 ====
-      function classify(task, lower) {
-        // 边缘情况 1: 高情绪阻力沟通（优先判断）
-        const highEmotionWords = ['拖延很久', '不敢联系', '愧疚', '害怕', '尴尬', '客户', '老板', '前任', '道歉', '催', '报价单'];
-        if (highEmotionWords.some(w => lower.includes(w))) return 'high_emotion';
-
-        // 边缘情况 2: 抽象目标类
-        const abstractWords = ['提升自己', '找灵感', '人生方向', '做副业', '变好', '变自律', '改变现状', '迷茫', '方向', '成长', '自律', '改进'];
-        if (abstractWords.some(w => lower.includes(w))) return 'abstract';
-
-        // 身体行动类
-        const bodyWords = ['跑步', '锻炼', '健身', '瑜伽', '冥想', '跳舞', '散步', '拉伸', '运动', '健身'];
-        if (bodyWords.some(w => lower.includes(w))) return 'body';
-
-        // 学习输入类
-        const learnWords = ['看书', '学习', '背单词', '学英语', '读资料', '阅读', '看论文', '学python', '学编程', '上课', '听课', '读书'];
-        if (learnWords.some(w => lower.includes(w))) return 'learn';
-
-        // 空白创造类
-        const createWords = ['写', '画', '设计', '码代码', '做ppt', '做方案', '写文案', '写报告', '做海报', '剪视频', '写论文', '作品集', '做幻灯片', '做视频', '文案', '写稿', '写代码', '做图', '做设计'];
-        if (createWords.some(w => lower.includes(w))) return 'create';
-
-        // 物理整理类
-        const organizeWords = ['收拾', '打扫', '搬家', '整理', '清理', '归档', '洗衣服', '刷碗', '发票', '文件夹', '储物', '归置', '清洁'];
-        if (organizeWords.some(w => lower.includes(w))) return 'organize';
-
-        // 沟通类
-        const commWords = ['联系', '汇报', '发邮件', '发消息', '打电话', '找客户', '问人', '回复', '通知', '沟通', '回消息', '发微信'];
-        if (commWords.some(w => lower.includes(w))) return 'comm';
-
-        return 'unknown';
-      }
-
-      function extractObject(task) {
-        // Try to extract the main noun/topic after action verbs
-        const patterns = [
-          /[写做画设计准备开始整理学习看读背跑锻炼]+[的着了]?[：: ]?(.{1,20})$/,
-          /(?:关于|用|把|给|找)[的着了]?(.{1,15})/,
-        ];
-        for (const p of patterns) {
-          const m = task.match(p);
-          if (m) return m[1].trim();
-        }
-        return task.replace(/^[我你他她它]+\s*[想要不要准备开始]+/, '').trim().slice(0, 12);
-      }
-
-      const type = classify(task, lower);
-      const obj = extractObject(task) || '这件事';
-
-      // 应用模板
-      switch (type) {
-        case 'high_emotion': {
-          const tool = (lower.includes('邮箱') || lower.includes('邮件') || lower.includes('mail') || lower.includes('报价')) ? '邮箱' : '聊天窗口';
-          return `打开${tool}，只输对方名字首字母，停止3秒`;
-        }
-        case 'abstract': {
-          return `打开备忘录，写下关于${obj}，然后打出3个词`;
-        }
-        case 'body': {
-          if (lower.includes('跑步') || lower.includes('跑')) return '找出跑鞋，系上左脚鞋带';
-          if (lower.includes('瑜伽')) return '铺开瑜伽垫，站到垫子边缘';
-          if (lower.includes('冥想')) return '坐下闭眼，只做三次深呼吸';
-          if (lower.includes('健身') || lower.includes('锻炼')) return '换上运动服，站起来伸懒腰';
-          if (lower.includes('散步')) return '穿上鞋，推开门走出去';
-          return '找出运动装备，让身体接触它';
-        }
-        case 'learn': {
-          if (lower.includes('学英语') || lower.includes('背单词')) return '打开单词App，只看第一个单词';
-          if (lower.includes('阅读') || lower.includes('看书') || lower.includes('读书') || lower.includes('书')) return '翻开书，用手指触摸第一行字';
-          if (lower.includes('学python') || lower.includes('学编程') || lower.includes('学代码')) return '打开教程，只看第一段标题';
-          return '翻开资料，只触摸第一页';
-        }
-        case 'create': {
-          if (lower.includes('ppt') || lower.includes('幻灯片')) return '打开PPT，只打出标题页日期';
-          if (lower.includes('海报') || lower.includes('设计')) return '打开设计软件，新建空白画布';
-          if (lower.includes('代码') || lower.includes('编程') || lower.includes('码')) return '打开编辑器，新建空文件';
-          if (lower.includes('视频') || lower.includes('剪')) return '打开剪辑软件，拖入第一段素材';
-          if (lower.includes('论文') || lower.includes('作品集')) return `打开文档，只打出${obj.slice(0, 8)}作为标题`;
-          return `打开文档，只打出${obj.slice(0, 6)}三字`;
-        }
-        case 'organize': {
-          if (lower.includes('发票') || lower.includes('文件')) return '拿出一个文件夹，只放进一张发票';
-          if (lower.includes('下载') || lower.includes('电脑')) return '打开下载文件夹，只选中第一个文件';
-          if (lower.includes('衣柜') || lower.includes('衣服') || lower.includes('衣')) return '打开衣柜，只把一件衣服挂好';
-          if (lower.includes('厨房') || lower.includes('碗')) return '打开水龙头，只洗一个碗';
-          return '拿出一个袋子，只放一件物品进去';
-        }
-        case 'comm': {
-          if (lower.includes('邮件') || lower.includes('邮箱') || lower.includes('mail')) return '打开邮箱，标题只写初稿';
-          if (lower.includes('电话') || lower.includes('打')) return '拿起手机，只拨前三位号码';
-          if (lower.includes('消息') || lower.includes('微信') || lower.includes('聊天')) return '打开聊天窗口，只输入在吗';
-          return '打开沟通工具，只输入你好';
-        }
-        default: {
-          // 万能保底
-          return `打开备忘录，写下关于${obj}的第一念，然后随便打5个字`;
-        }
-      }
+    function normalizeTask(task) {
+      return String(task || '').replace(/^用户目标：/m, '').replace(/常用条件：[\s\S]*$/m, '').trim();
     }
 
-    // ============================================
-    // validateAction — 输出校验
-    // 所有 mock 和真实 AI 结果都必须经过此函数
-    // ============================================
-    const PHYSICAL_ACTION_WORDS = ['打开', '拿出', '触摸', '按下', '写下', '写出', '打出', '输入', '放进', '系上', '翻到', '找出', '右键', '点开', '移动', '复制', '粘贴', '选中', '拖入', '放下', '站到', '坐下', '穿上'];
-    const FORBIDDEN_WORDS = ['分析', '规划', '拆解', '构思', '列出', '梳理', '评估', '思考', '研究', '复盘', '总结', '步骤', '首先', '建议', '计划'];
-    const OVERSCALE_PATTERNS = [/完成/, /做完/, /写完/, /整理所有/, /全部/, /整个/, /所有资料/, /所有文件/, /学完/, /跑完/, /发出去/, /发送/, /提交/];
-
-    function validateActions(actions, task) {
-      if (!Array.isArray(actions) || actions.length !== 3) {
-        return { valid: false, fallback: fallbackActions(task) };
-      }
-      for (let i = 0; i < 3; i++) {
-        const a = actions[i];
-        if (typeof a !== 'string' || !a.trim()) {
-          return { valid: false, fallback: fallbackActions(task) };
-        }
-        for (const w of FORBIDDEN_WORDS) {
-          if (a.includes(w)) return { valid: false, fallback: fallbackActions(task) };
-        }
-        const clean = a.replace(/[\s，。、；：！？""''（）【】《》—…·]/g, '').length;
-        if (clean > 35) return { valid: false, reason: '超长', fallback: fallbackActions(task) };
-        if (a.includes('\n') || a.includes('\r')) return { valid: false, fallback: fallbackActions(task) };
-        if (!PHYSICAL_ACTION_WORDS.some(w => a.includes(w))) {
-          return { valid: false, reason: '缺动作词', fallback: fallbackActions(task) };
-        }
-        for (const p of OVERSCALE_PATTERNS) {
-          if (p.test(a)) return { valid: false, fallback: fallbackActions(task) };
-        }
-      }
-      return { valid: true, actions };
+    function extractTopic(task) {
+      return normalizeTask(task)
+        .replace(/^我想要?/, '')
+        .replace(/^开始/, '')
+        .replace(/^(写|做|设计|准备|制作|整理)/, '')
+        .replace(/[。.!！]$/, '')
+        .trim()
+        .slice(0, 24) || '这件事';
     }
 
     function fallbackActions(task) {
-      const short = task.replace(/^用户目标：/, '').slice(0, 10);
-      return [`打开备忘录。`, `写下关于${short}。`, '随便打出5个字。'];
+      const raw = normalizeTask(task);
+      const lower = raw.toLowerCase();
+      const pack = a => a;
+
+      if (/(查看|处理|清理|读|看).*(邮箱|邮件|收件箱|未读)|(邮箱|邮件|收件箱|未读).*(太多|五百|几百|未读|积压|爆满)/.test(lower)) return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
+      if (/(睡|午觉|小睡|休息|躺一会|补觉)/.test(lower)) return pack(['关掉手机屏幕。', '拉上窗帘。', '躺到枕头上。']);
+      if (/(行李|打包|旅行|旅游|出差|回家|箱子|行李箱|背包|护照|证件|充电器|洗漱)/.test(lower)) return pack(['找出行李箱。', '拉开箱子拉链。', '放进一件最容易拿到的衣服。']);
+      if (/(起诉|诉讼|法院|律师|证据|材料|资料|合同|发票|报销|申请|文件|文档)/.test(lower)) {
+        if (/(起诉|诉讼|法院|律师|证据)/.test(lower)) return pack(['打开起诉材料文件夹。', '新建一个「待整理」文件夹。', '拖入一个相关文件。']);
+        return pack(['打开材料文件夹。', '新建一个「待整理」文件夹。', '拖入一个相关文件。']);
+      }
+      if (/(客户|老板|前任|道歉|催|报价单|不敢联系|愧疚|尴尬|害怕)/.test(lower)) return pack(['打开邮箱。', '点开搜索框。', '输入对方名字首字母。']);
+      if (/(邮件|消息|联系|回复|汇报|沟通|电话|微信)/.test(lower)) return pack(['打开沟通工具。', '点开输入框。', '输入一个称呼但不发送。']);
+      if (/(跑步|锻炼|健身|瑜伽|冥想|散步|运动|拉伸)/.test(lower)) {
+        if (/跑/.test(lower)) return pack(['找出跑鞋。', '穿上左脚跑鞋。', '系上左脚鞋带。']);
+        if (/瑜伽/.test(lower)) return pack(['铺开瑜伽垫。', '站到垫子边缘。', '放下手机。']);
+        if (/冥想/.test(lower)) return pack(['坐下。', '按下计时器。', '闭眼呼吸一次。']);
+        return pack(['找出运动装备。', '让手触摸它。', '穿上其中一件。']);
+      }
+      if (/(看书|学习|背单词|学英语|阅读|课程|听课|资料)/.test(lower) && !/(写|制作|准备|教案)/.test(lower)) {
+        if (/(英语|单词)/.test(lower)) return pack(['打开英语学习应用。', '点击进入今天的课程。', '大声读出第一句话。']);
+        return pack(['打开学习资料。', '翻到当前页。', '用手指触摸第一行字。']);
+      }
+      if (/(写|画|设计|ppt|PPT|方案|文案|报告|海报|剪视频|代码|论文|教案|课件|课程)/.test(lower)) {
+        const topic = extractTopic(raw);
+        if (/(教案|课程|课件)/.test(lower)) {
+          if (/(营养|儿童|g3|g4|g5)/.test(lower)) return pack(['打开一个空白文档。', '写下「G3-5儿童营养课：午餐盘」。', '在下一行打出「孩子先画自己今天吃了什么」。']);
+          return pack(['打开教案文档。', '写下「' + topic + '」。', '在下一行打出一个课堂开场问题。']);
+        }
+        if (/(周报|报告)/.test(lower)) return pack(['打开上周周报。', '复制一个小标题到新文档。', '在下面打出本周最容易想起的一件事。']);
+        if (/(海报|设计)/.test(lower)) return pack(['打开设计软件。', '新建空白画布。', '把「' + topic + '」打在画布中央。']);
+        if (/(代码|编程|码)/.test(lower)) return pack(['打开编辑器。', '新建一个空文件。', '输入一行描述目标的注释。']);
+        return pack(['打开文档。', '写下「' + topic + '」。', '在下一行打出一个最具体的例子。']);
+      }
+      if (/(收拾|打扫|搬家|整理|清理|归档|洗衣服|刷碗|衣柜|桌面|房间|厨房)/.test(lower)) {
+        if (/(桌面|电脑)/.test(lower)) return pack(['右键桌面。', '新建一个文件夹。', '拖入一个文件。']);
+        return pack(['拿出一个袋子。', '找出一个最显眼的小物品。', '把它放进袋子。']);
+      }
+      const shortTask = raw.slice(0, 12) || '这件事';
+      return pack(['打开备忘录。', '写下「关于' + shortTask + '」。', '随便打出5个字。']);
+    }
+
+    const PHYSICAL_ACTION_WORDS = ['打开', '拿出', '触摸', '按下', '写下', '写出', '打出', '输入', '放进', '放到', '装进', '塞进', '系上', '翻到', '找出', '找到', '定位', '右键', '点开', '点击', '进入', '移动', '滚动', '滑到', '复制', '粘贴', '选中', '拖入', '拖到', '拉开', '拉上', '放下', '停住', '停下', '站到', '坐下', '躺下', '躺到', '穿上', '改成', '新建', '读出', '关上', '关掉', '打在'];
+    const FORBIDDEN_PATTERNS = [/规划/, /拆解/, /构思/, /列出/, /梳理/, /评估/, /思考/, /研究/, /复盘/, /总结/, /步骤/, /首先/, /建议/, /计划/, /分析(?!能力)/];
+    const OVERSCALE_PATTERNS = [/完成/, /做完/, /写完/, /整理所有/, /全部/, /整个/, /所有资料/, /所有文件/, /学完/, /跑完/, /发出去/, /发送/, /提交/];
+
+    function validateActions(actions, task) {
+      if (!Array.isArray(actions) || actions.length !== 3) return { valid: false, reason: '不是三步数组', fallback: fallbackActions(task) };
+      const cleaned = actions.map(a => String(a || '').trim());
+      for (let i = 0; i < cleaned.length; i++) {
+        const a = cleaned[i];
+        if (!a) return { valid: false, reason: '空动作', fallback: fallbackActions(task) };
+        if (a.includes('\n') || a.includes('\r')) return { valid: false, reason: '换行', fallback: fallbackActions(task) };
+        if (FORBIDDEN_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '禁用词', fallback: fallbackActions(task) };
+        const clean = a.replace(/[\s，。、；：！？""''（）【】《》—…·]/g, '').length;
+        if (clean > 45) return { valid: false, reason: '超长', fallback: fallbackActions(task) };
+        if (i < 2 && !PHYSICAL_ACTION_WORDS.some(w => a.includes(w))) return { valid: false, reason: '缺动作词', fallback: fallbackActions(task) };
+        if (OVERSCALE_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '动作过大', fallback: fallbackActions(task) };
+      }
+      return { valid: true, actions: cleaned };
+    }
+
+    function renderDebug(data, validation, finalActions) {
+      const panel = document.getElementById('debugPanel');
+      const content = document.getElementById('debugContent');
+      if (!panel || !content) return;
+      panel.classList.add('show');
+      const source = data && data.source ? data.source : 'frontend_fallback';
+      const reason = (data && data.reason) || (validation && validation.reason) || '';
+      const raw = (data && (data.raw || (data.debug && data.debug.rawAction))) || '';
+      const final = finalActions || (data && data.final) || [];
+      content.innerHTML = [
+        ['source', source],
+        ['reason', reason],
+        ['raw AI', raw],
+        ['final', JSON.stringify(final, null, 2)]
+      ].map(([label, value]) => '<div class="debug-row"><strong>' + escHtml(label) + '</strong><pre>' + escHtml(String(value || '')) + '</pre></div>').join('');
+    }
+
+    function applyGeneratedActions(data, validationContext) {
+      if (!data.action && !Array.isArray(data.actions)) throw new Error('返回数据异常');
+      currentActions = Array.isArray(data.actions) ? data.actions : [data.action];
+      let validation = validateActions(currentActions, currentTask);
+      if (!validation.valid) {
+        currentActions = validation.fallback;
+      } else {
+        currentActions = validation.actions;
+      }
+      currentAction = currentActions.join(' ');
+      renderActions(currentActions);
+      actionTask.textContent = '「' + currentTask + '」';
+      renderDebug(data, validation, currentActions);
+      if (validationContext === 'refine' && refineBox) refineBox.style.display = 'none';
+    }
+
+    async function requestGeneratedActions(aiTask, tools, validationContext) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: aiTask, tools: tools || '' }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      const data = await res.json();
+      if (validationContext === 'refine') data.revision = 'user_preference';
+      applyGeneratedActions(data, validationContext);
     }
 
     // ============================================
@@ -950,78 +915,50 @@
     // ============================================
     async function generateStartAction() {
       currentTask = taskInput.value.trim();
-      currentTools = document.getElementById('toolsInput').value.trim();
+      currentTools = '';
       if (currentTask.length < 3) return;
 
       showView('loading');
-
-      // 构建发送给 AI 的提示（含常用条件信息）
-      let aiTask;
-      if (currentTools) {
-        aiTask = `用户目标：${currentTask}\n常用条件：${currentTools}\n\n请围绕常用条件生成第一步动作。`;
-      } else {
-        aiTask = `用户目标：${currentTask}\n常用条件：无`;
-      }
+      const aiTask = '用户目标：' + currentTask + '\n常用条件：无';
 
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000);
-        const res = await fetch('/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ task: aiTask, tools: currentTools }),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-
-        const data = await res.json();
-
-        // 后端 always 200 with { action, source, warning? }
-        if (!data.action) {
-          throw new Error('返回数据异常');
-        }
-
-        // 从后端获取 actions 数组
-        currentActions = data.actions || [data.action];
-        currentAction = currentActions.join(' ');
-
-        // 校验输出
-        const validation = validateActions(currentActions, currentTask);
-        if (!validation.valid) {
-          currentActions = fallbackActions(currentTask);
-          currentAction = currentActions.join(' ');
-        }
-
-        // 显示 3 个步骤
-        renderActions(currentActions);
-        actionTask.textContent = '「' + currentTask + '」';
-
-        // 如果是 fallback，显示提示文字
-        let warningEl = document.getElementById('fallback-warning');
-        if (data.source === 'fallback' || data.warning) {
-          if (!warningEl) {
-            warningEl = document.createElement('p');
-            warningEl.id = 'fallback-warning';
-            warningEl.style.cssText = 'font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 8px;';
-            document.querySelector('#view-action .action-display').after(warningEl);
-          }
-          warningEl.textContent = data.warning || '已使用本地保底动作';
-        } else if (warningEl) {
-          warningEl.remove();
-        }
-
+        await requestGeneratedActions(aiTask, '', 'initial');
+        if (preferenceInput) preferenceInput.value = '';
+        if (refineBox) refineBox.style.display = 'none';
         resetTimer();
         showView('action');
-
       } catch (err) {
         console.error('generateStartAction 错误:', err);
-        // 网络级失败 → 前端本地保底
         currentActions = fallbackActions(currentTask);
         currentAction = currentActions.join(' ');
         renderActions(currentActions);
         actionTask.textContent = '「' + currentTask + '」';
+        renderDebug({ source: 'frontend_fallback', reason: err.message || 'Load failed', raw: '' }, { valid: false, reason: err.message || 'Load failed' }, currentActions);
         resetTimer();
         showView('action');
+      }
+    }
+
+    async function regenerateWithPreference() {
+      const preference = preferenceInput ? preferenceInput.value.trim() : '';
+      if (!preference) return;
+      const previous = currentActions.length ? currentActions.join(' / ') : '';
+      const aiTask = '用户原始任务：' + currentTask
+        + '\n上一版启动链：' + previous
+        + '\n用户反馈：上一版不贴近我现在的情况。'
+        + '\n用户补充的当前情况或偏好：' + preference
+        + '\n\n请基于用户补充重新判断真实卡点，重新生成 2 分钟三步启动链。不要坚持上一版方向。仍然只输出 JSON 数组。';
+
+      const oldText = btnRegenerate ? btnRegenerate.textContent : '';
+      try {
+        if (btnRegenerate) { btnRegenerate.disabled = true; btnRegenerate.textContent = '正在重新生成…'; }
+        await requestGeneratedActions(aiTask, preference, 'refine');
+        resetTimer();
+      } catch (err) {
+        console.error('regenerateWithPreference 错误:', err);
+        renderDebug({ source: 'frontend_fallback', reason: err.message || 'Regenerate failed', raw: '' }, { valid: false, reason: err.message || 'Regenerate failed' }, currentActions);
+      } finally {
+        if (btnRegenerate) { btnRegenerate.disabled = false; btnRegenerate.textContent = oldText || '重新生成启动链'; }
       }
     }
 
@@ -1120,13 +1057,16 @@
       }
       feedbackError.classList.remove('show');
       return {
-        completed: q1.value,
-        stateAfterAction: q2.value,
-        wouldStartWithoutPrompt: q3.value,
-        chainFeeling: q4.value,
+        completionDepth: q1.value,
+        taskFit: q2.value,
+        resistanceChange: q3.value,
+        wouldStartWithoutPrompt: q4.value,
         openFeedback: feedbackNote.value.trim(),
         actionMode: 'three_step',
-        actions: currentActions
+        actions: currentActions,
+        completed: q1.value,
+        stateAfterAction: q3.value,
+        chainFeeling: q2.value
       };
     }
 
@@ -1157,11 +1097,15 @@
     // ============================================
     function showThanks(fb) {
       const qLabels = {
-        completed: '执行情况', stateAfterAction: '执行后状态', wouldStartWithoutPrompt: '无提示是否会开始'
+        completionDepth: '执行深度', taskFit: '贴合度', resistanceChange: '阻力变化', wouldStartWithoutPrompt: '无提示是否会开始'
       };
       const elapsedStr = timerElapsed < 60
         ? timerElapsed + ' 秒'
         : Math.floor(timerElapsed / 60) + ' 分 ' + (timerElapsed % 60) + ' 秒';
+
+      const actionChain = Array.isArray(currentActions) && currentActions.length
+        ? currentActions.map((action, idx) => (idx + 1) + '. ' + escHtml(action)).join('<br>')
+        : escHtml(currentAction);
 
       summaryBox.innerHTML = `
         <div class="summary-row">
@@ -1169,20 +1113,24 @@
           <span class="summary-value">${escHtml(currentTask)}</span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">启动动作</span>
-          <span class="summary-value">${escHtml(currentAction)}</span>
+          <span class="summary-label">启动链</span>
+          <span class="summary-value">${actionChain}</span>
         </div>
         <div class="summary-row">
           <span class="summary-label">执行时长</span>
           <span class="summary-value">${elapsedStr}</span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">${qLabels.completed}</span>
-          <span class="summary-value">${escHtml(fb.completed)}</span>
+          <span class="summary-label">${qLabels.completionDepth}</span>
+          <span class="summary-value">${escHtml(fb.completionDepth || fb.completed)}</span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">${qLabels.stateAfterAction}</span>
-          <span class="summary-value">${escHtml(fb.stateAfterAction)}</span>
+          <span class="summary-label">${qLabels.taskFit}</span>
+          <span class="summary-value">${escHtml(fb.taskFit || fb.chainFeeling || fb.stateAfterAction)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">${qLabels.resistanceChange}</span>
+          <span class="summary-value">${escHtml(fb.resistanceChange || fb.stateAfterAction)}</span>
         </div>
         <div class="summary-row">
           <span class="summary-label">${qLabels.wouldStartWithoutPrompt}</span>
@@ -1209,14 +1157,17 @@
     // ============================================
     function exportCSV() {
       if (history.length === 0) return;
-      const headers = ['createdAt', 'task', 'action', 'actions', 'actionMode', 'durationSeconds', 'completed', 'stateAfterAction', 'wouldStartWithoutPrompt', 'chainFeeling', 'openFeedback'];
+      const headers = ['createdAt', 'task', 'action', 'actions', 'actionMode', 'durationSeconds', 'completionDepth', 'taskFit', 'resistanceChange', 'wouldStartWithoutPrompt', 'openFeedback'];
       const rows = history.map(e => [
         e.createdAt,
         e.task,
         e.action,
+        Array.isArray(e.actions) ? e.actions.join(' / ') : '',
+        e.actionMode || '',
         e.durationSeconds,
-        e.completed,
-        e.stateAfterAction,
+        e.completionDepth || e.completed || '',
+        e.taskFit || e.chainFeeling || '',
+        e.resistanceChange || e.stateAfterAction || '',
         e.wouldStartWithoutPrompt,
         e.openFeedback || ''
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
@@ -1261,12 +1212,16 @@
       taskInput.value = '';
       charCount.textContent = '0';
       document.getElementById('toolsInput').value = '';
+      if (preferenceInput) preferenceInput.value = '';
+      if (refineBox) refineBox.style.display = 'none';
       currentTools = '';
       btnGetAction.disabled = true;
       feedbackNote.value = '';
       feedbackError.classList.remove('show');
       document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
       document.querySelectorAll('.option.selected').forEach(el => el.classList.remove('selected'));
+      currentActions = [];
+      currentAction = '';
       stopTimer();
       resetTimer();
       showView('input');
@@ -1289,6 +1244,15 @@
       }
     });
     btnGetAction.addEventListener('click', generateStartAction);
+    if (btnRefineToggle && refineBox) {
+      btnRefineToggle.addEventListener('click', () => {
+        refineBox.style.display = refineBox.style.display === 'none' ? 'block' : 'none';
+        if (refineBox.style.display === 'block' && preferenceInput) preferenceInput.focus();
+      });
+    }
+    if (btnRegenerate) {
+      btnRegenerate.addEventListener('click', regenerateWithPreference);
+    }
 
     // Timer
     btnStartTimer.addEventListener('click', () => {

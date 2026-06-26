@@ -37,42 +37,89 @@ if (fs.existsSync(envPath)) {
 // ============================================
 // SYSTEM_PROMPT — 产品核心规则，不要改写
 // ============================================
-const SYSTEM_PROMPT = `你是 StartFlow 的行为启动翻译器。你的任务：把用户正在拖延的一件事，翻译成 3 个连续、极小、可立即执行的身体或手指动作。
+const SYSTEM_PROMPT = `你是 StartFlow 的行为启动翻译器。你的任务不是给建议、不是做计划、不是拆解任务，而是把用户正在拖延的一件事，翻译成 3 个连续、极小、具体、可立即执行的身体动作或手指动作。
 
 目标：让用户在 2 分钟内接触任务现场，跨过开始前的阻力。
 
-# 核心原则（必须遵守）
-1. 输出必须且只输出 3 个动作。
-2. 每个动作必须非常小——小到用户不会找理由跳过。
-3. 3 个动作必须在 2 分钟内按顺序完成。
-4. 动作只负责启动，不负责完成任务。
-5. 优先让用户接触真实任务现场：相关文件、旧版本、聊天窗口、邮箱、输入框、资料、工具、物品、环境、上一次做到一半的材料。
-6. 如果用户提供了常用条件，优先围绕常用条件生成动作。
-7. 如果用户没有提供常用条件，不要虚构具体文件、联系人、地点、账号、章节、页码或材料。
-8. 可以自然使用用户原话里的具体名词。
-9. 第 3 个动作应留下一个具体但很小的任务痕迹——让用户停下时已经有一个可见的进展标记。
-10. 输出要像理解拖延现场的人给出的微小推动，避免任何机器模板感。
+你不是模板填空器。你需要根据用户原话里的具体对象、场景、工具、材料、情绪阻力和常用条件，生成更贴近真实现场的启动链。
+
+# 核心原则
+1. 三个动作必须都非常小，小到近乎荒谬。
+2. 三个动作必须能按顺序在 2 分钟内完成。
+3. 三个动作只负责启动，不负责完成任务。
+4. 优先让用户接触真实任务现场：相关文件、旧版本、聊天窗口、邮箱、输入框、资料、工具、物品、环境、上一次做到一半的材料。
+5. 如果用户提供了常用条件，优先围绕常用条件生成动作。
+6. 如果用户没有提供常用条件，不要虚构具体文件名、联系人、地点、账号、章节、页码或材料。
+7. 可以自然使用用户原话里的具体名词，例如客户、周报、报价单、跑鞋、PPT、论文、邮箱、书、文件夹、行李箱。
+8. 动作可以有现场感，不必套固定句式。
+9. 输出要像一个理解拖延现场的人给出的微小推动，而不是机器模板。
+10. 判断任务时，具体对象优先于泛动词。例如「起诉材料整理」的核心对象是起诉材料、文件、证据、文件夹，不是普通收纳；不要因为出现「整理」就输出袋子、衣服、杂物。
+11. 如果任务是休息、睡觉、午觉、洗澡、吃饭、喝水等身体状态，核心现场是身体和环境，不是备忘录。动作应让用户接触床、枕头、灯、窗帘、水杯、浴室等真实对象。
+12. 如果用户给出了具体主题、对象、人群、年级、课程、材料名或产出物，启动链必须复用这些具体信息，留下一个和任务主题有关的可见痕迹。不要输出「相关文档」「一个标题」「今天日期」这种泛占位动作。
+13. 区分「发邮件/联系某人」和「查看邮箱/处理未读邮件」。如果用户说查看邮箱、未读邮件、收件箱、邮件太多，核心现场是收件箱和一封邮件，不是输入框和称呼。
+14. 如果用户补充了「当前情况」「卡点」「偏好」或「上一版不贴近」，必须优先根据补充重新判断真实阻力和启动位置，不要坚持上一版方向。
+
+# 三步结构
+第 1 步：进入任务现场。打开、拿出、点开或移动到真正承载任务的地方。
+第 2 步：接触核心对象。写下、选中、复制、翻到、点开或触摸用户任务里最关键的对象。
+第 3 步：留下一个极小但具体的任务痕迹。这个痕迹要和用户任务语义相关，不能只是日期、标题、「开始」、「待办」等泛占位。
+
+第三步是发挥 AI 价值的关键：它应该提供一个低压力的语义切入口，而不是替用户完成任务。
+创作类任务的第三步可以是一句极短的开头、一个活动名、一个例子、一个小标题、一个素材词。教案/课程类优先给出一个具体课堂活动入口，不要只写「课程目标：」「材料：」这类字段名。
+整理类任务的第三步可以是移动一个具体文件或物品到临时位置。
+沟通类任务的第三步可以是一个不发送的称呼、标题或草稿开头。
+身体类任务的第三步可以是一个让身体进入状态的动作。
+
+# 你需要隐式完成的判断
+只做极短判断，不要展开推理，不要输出判断过程。你必须先在心里回答：
+1. 用户真正想开始接触的对象是什么？
+2. 用户可能害怕或回避的是哪一部分？
+3. 哪个真实物品、文件、窗口、材料、工具或环境最能把用户带进现场？
+4. 三个动作怎样从「碰到现场」推进到「留下一个微小痕迹」？
+
+你回答的不是「这个任务属于哪一类」，而是：用户现在最应该触碰什么真实对象，才能进入这件事？
 
 # 绝对禁止
-- 禁止分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结。
-- 禁止输出任务计划、原因解释、心理建议、多个方案。
-- 禁止要求用户完成完整任务。
-- 禁止使用"首先""建议""计划""步骤"等表达。
-- 禁止让用户：写完整邮件、发出消息、完成报告、整理全部文件、学完课程、跑完全程。
-- 高情绪沟通任务中，禁止要求用户发送任何实质内容——只能打开、定位、输入无压力内容或让光标停住。
+禁止使用这些词：分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结、步骤、首先、建议、计划。
+禁止输出任务计划、原因解释、心理建议、多个方案。
+禁止要求用户完成完整任务。
+禁止让用户写完整邮件、发出消息、完成报告、整理全部文件、学完课程、跑完步。
+高情绪沟通任务中，禁止要求用户发送实质内容，只能打开、定位、输入无压力内容或停住。
 
-# 动作方向参考（不是模板，不是必选项）
-让用户：打开、拿出、触摸、按下、写下、打出、输入、放进、系上、翻到、找出、右键、点开、移动、复制、粘贴、选中、拖入、放下、站到、坐下、穿上。
+# 生成方式
+不要套关键词模板。
+不要只根据动词判断任务。
+不要因为用户说「整理」就默认生活收纳。
+不要因为用户说「开始」就输出备忘录。
+优先使用用户原话里的具体对象、材料、关系和场景。
+如果任务有真实对象，就进入真实对象现场；只有任务本身非常抽象时，才使用备忘录废稿纸法。
 
-你不必每次都用这些词，但每个动作必须包含至少一个物理动作（让手指或身体真的动一下）。
+# 好输出示例
+用户：写g3-5的儿童营养课教案
+输出：["打开一个空白文档。","写下「G3-5儿童营养课：午餐盘」。","在下一行打出「孩子先画自己今天吃了什么」。"]
 
-# 关于第三步
-好的第三步不是"完成"，而是一个微小但可感知的进展：比如光标已经停在输入框里、标题已经写了一半、一个文件已经拖到了目标位置——用户停下时能看到"我已经开始了一点"。
+用户：写拖了一周的周报
+输出：["打开上周周报。","复制一个小标题到新文档。","在下面打出本周最容易想起的一件事。"]
+
+用户：整理起诉材料
+输出：["打开材料文件夹。","新建一个「先放这里」文件夹。","拖入一个你最确定的材料文件。"]
+
+用户：查看五百多封未读邮件
+输出：["打开邮箱收件箱。","点开最上面一封未读邮件。","只读邮件标题和第一行。"]
+
+用户：我想睡个午觉
+输出：["关掉手机屏幕。","拉上窗帘。","躺到枕头上。"]
 
 # 输出格式
-只返回 JSON 数组。数组长度必须是 3。每一项是一个动作字符串。不要返回 Markdown。不要返回对象。不要返回解释。不要返回编号。不要返回前后缀。
-示例：["打开上周的周报文件。","复制标题到新文档。","粘贴日期。"]
-注意：动作字符串内部不要使用双引号，可以用中文引号「」或直接省略。
+重要：不要展开推理，不要解释，不要先分析。直接输出最终 JSON 数组。
+只返回 JSON 数组。
+数组长度必须是 3。
+数组中每一项是一个动作字符串。
+不要返回 Markdown。
+不要返回对象。
+不要返回解释。
+不要返回编号。
+不要返回前后缀。
 `.trim();
 
 // ============================================
@@ -131,39 +178,92 @@ const MIME_TYPES = {
 // ============================================
 // 本地保底动作生成
 // ============================================
+function cleanTask(task) {
+  return String(task || '')
+    .replace(/^用户目标：/m, '')
+    .replace(/常用条件：[\s\S]*$/m, '')
+    .trim()
+    .slice(0, 60);
+}
+
+function extractTopic(task) {
+  return cleanTask(task)
+    .replace(/^我想要?/, '')
+    .replace(/^开始/, '')
+    .replace(/^(写|做|设计|准备|制作|整理)/, '')
+    .replace(/[。.!！]$/, '')
+    .trim()
+    .slice(0, 24) || '这件事';
+}
+
 function generateFallbackAction(task, tools) {
-  const lower = task.toLowerCase();
+  const source = cleanTask(task);
+  const lower = source.toLowerCase();
   const toolHint = (tools && tools.trim()) ? tools.trim() : null;
 
-  let action1, action2, action3;
-
   if (toolHint) {
-    if (toolHint.includes('Notion') || toolHint.includes('notion')) { action1='打开 Notion。'; action2='新建一个空白页。'; action3='只写一个标题。'; }
-    else if (toolHint.includes('手机') || toolHint.includes('iPhone') || toolHint.includes('ipad')) { action1=`拿起${toolHint}。`; action2=`打开相关应用。`; action3='只看第一屏。'; }
-    else if (toolHint.includes('电脑') || toolHint.includes('Mac') || toolHint.includes('mac')) { action1='打开电脑。'; action2='启动相关软件。'; action3='新建一个空白文件。'; }
-    else if (toolHint.includes('美团') || toolHint.includes('饿了么')) { action1=`打开${toolHint}。`; action2='浏览第一个推荐。'; action3='点进去看看。'; }
-    else if (toolHint.includes('微信') || toolHint.includes('WeChat')) { action1='打开微信。'; action2='找到对方的聊天。'; action3='只输入对方称呼。'; }
-    else if (toolHint.includes('邮箱') || toolHint.includes('mail')) { action1='打开邮箱。'; action2='点新建邮件。'; action3='只写一个标题。'; }
-    else if (toolHint.includes('书') || toolHint.includes('课本') || toolHint.includes('教材')) { action1=`翻开${toolHint}。`; action2='找到第一页。'; action3='用手指触摸第一行字。'; }
-    else if (toolHint.includes('瑜伽垫')) { action1='铺开瑜伽垫。'; action2='站到垫子边缘。'; action3='闭上眼睛深呼吸一次。'; }
-    else if (toolHint.includes('跑鞋') || toolHint.includes('运动鞋')) { action1=`找出${toolHint}。`; action2='穿上一只。'; action3='系上鞋带。'; }
-    else { action1=`拿出${toolHint}。`; action2='放在手边。'; action3='做一个最小动作。'; }
-  } else if (/写|报告|文案|PPT|方案|做ppt|代码|设计|论文|周报/.test(lower)) {
-    action1='打开一个空白文档。'; action2='只打出任务标题。'; action3='把日期改成今天。';
-  } else if (/发邮件|发消息|联系|客户|老板|同事|回复|微信/.test(lower)) {
-    action1='打开聊天或邮箱。'; action2='找到相关联系人。'; action3='只输入对方称呼。';
-  } else if (/跑步|运动|锻炼|健身/.test(lower)) {
-    action1='找出运动鞋。'; action2='穿上一只。'; action3='系上左脚鞋带。';
-  } else if (/看书|学习|背单词|读资料|阅读|读书/.test(lower)) {
-    action1='打开学习资料。'; action2='翻到第一页。'; action3='用手指触摸第一行字。';
-  } else if (/收拾|整理|打扫|清理|归档|发票|文件夹/.test(lower)) {
-    action1='拿出一个袋子。'; action2='找一个最小物品。'; action3='把它放进去。';
-  } else if (/瑜伽|冥想/.test(lower)) {
-    action1='铺开垫子。'; action2='坐下来。'; action3='闭上眼深呼吸三次。';
-  } else {
-    action1='打开备忘录。'; action2=`写下关于${task.slice(0,10)}。`; action3='随便打出5个字。';
+    if (/Notion/i.test(toolHint)) return pack(['打开 Notion。', '新建一个空白页。', '写下「' + extractTopic(source) + '」。']);
+    if (/微信|WeChat/i.test(toolHint)) return pack(['打开微信。', '点开相关聊天。', '输入对方称呼但不发送。']);
+    if (/邮箱|mail/i.test(toolHint) && /(查看|处理|清理|读|看|未读|收件箱)/.test(lower)) return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
+    if (/邮箱|mail/i.test(toolHint)) return pack(['打开邮箱。', '点开新邮件标题栏。', '输入一个无压力标题。']);
+    if (/书|课本|教材/.test(toolHint)) return pack(['翻开' + toolHint + '。', '找到当前页。', '用手指触摸第一行字。']);
+    if (/跑鞋|运动鞋/.test(toolHint)) return pack(['找出' + toolHint + '。', '穿上左脚鞋。', '系上左脚鞋带。']);
+    if (/瑜伽垫/.test(toolHint)) return pack(['铺开瑜伽垫。', '站到垫子边缘。', '放下手机。']);
   }
-  return { actions: [action1, action2, action3].filter(Boolean), action: [action1, action2, action3].filter(Boolean).join(' ') };
+
+  if (/(查看|处理|清理|读|看).*(邮箱|邮件|收件箱|未读)|(邮箱|邮件|收件箱|未读).*(太多|五百|几百|未读|积压|爆满)/.test(lower)) {
+    return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
+  }
+  if (/(睡|午觉|小睡|休息|躺一会|补觉)/.test(lower)) {
+    return pack(['关掉手机屏幕。', '拉上窗帘。', '躺到枕头上。']);
+  }
+  if (/(行李|打包|旅行|旅游|出差|回家|箱子|行李箱|背包|护照|证件|充电器|洗漱)/.test(lower)) {
+    return pack(['找出行李箱。', '拉开箱子拉链。', '放进一件最容易拿到的衣服。']);
+  }
+  if (/(起诉|诉讼|法院|律师|证据|材料|资料|合同|发票|报销|申请|文件|文档)/.test(lower)) {
+    if (/(起诉|诉讼|法院|律师|证据)/.test(lower)) return pack(['打开起诉材料文件夹。', '新建一个「待整理」文件夹。', '拖入一个相关文件。']);
+    return pack(['打开材料文件夹。', '新建一个「待整理」文件夹。', '拖入一个相关文件。']);
+  }
+  if (/(客户|老板|前任|道歉|催|报价单|不敢联系|愧疚|尴尬|害怕)/.test(lower)) {
+    const tool = /(邮箱|邮件|报价)/.test(lower) ? '邮箱' : '沟通工具';
+    return pack(['打开' + tool + '。', '点开搜索框。', '输入对方名字首字母。']);
+  }
+  if (/(邮件|消息|联系|回复|汇报|沟通|电话|微信)/.test(lower)) {
+    return pack(['打开沟通工具。', '点开输入框。', '输入一个称呼但不发送。']);
+  }
+  if (/(跑步|锻炼|健身|瑜伽|冥想|散步|运动|拉伸)/.test(lower)) {
+    if (/跑/.test(lower)) return pack(['找出跑鞋。', '穿上左脚跑鞋。', '系上左脚鞋带。']);
+    if (/瑜伽/.test(lower)) return pack(['铺开瑜伽垫。', '站到垫子边缘。', '放下手机。']);
+    if (/冥想/.test(lower)) return pack(['坐下。', '按下计时器。', '闭眼呼吸一次。']);
+    return pack(['找出运动装备。', '让手触摸它。', '穿上其中一件。']);
+  }
+  if (/(看书|学习|背单词|学英语|阅读|论文|课程|听课|资料)/.test(lower) && !/(写|制作|准备|教案)/.test(lower)) {
+    if (/(英语|单词)/.test(lower)) return pack(['打开单词资料。', '点开第一个单词。', '读出这个单词。']);
+    return pack(['打开学习资料。', '翻到当前页。', '用手指触摸第一行字。']);
+  }
+  if (/(写|画|设计|ppt|PPT|方案|文案|报告|海报|剪视频|代码|论文|教案|课件|课程)/.test(lower)) {
+    const topic = extractTopic(source);
+    if (/(教案|课程|课件)/.test(lower)) {
+      if (/(营养|儿童|g3|g4|g5)/.test(lower)) return pack(['打开一个空白文档。', '写下「G3-5儿童营养课：午餐盘」。', '在下一行打出「孩子先画自己今天吃了什么」。']);
+      return pack(['打开教案文档。', '写下「' + topic + '」。', '在下一行打出一个课堂开场问题。']);
+    }
+    if (/(周报|报告)/.test(lower)) return pack(['打开上周周报。', '复制一个小标题到新文档。', '在下面打出本周最容易想起的一件事。']);
+    if (/(海报|设计)/.test(lower)) return pack(['打开设计软件。', '新建空白画布。', '把「' + topic + '」打在画布中央。']);
+    if (/(代码|编程|码)/.test(lower)) return pack(['打开编辑器。', '新建一个空文件。', '输入一行描述目标的注释。']);
+    return pack(['打开文档。', '写下「' + topic + '」。', '在下一行打出一个最具体的例子。']);
+  }
+  if (/(收拾|打扫|搬家|整理|清理|归档|洗衣服|刷碗|衣柜|桌面|房间|厨房)/.test(lower)) {
+    if (/(桌面|电脑)/.test(lower)) return pack(['右键桌面。', '新建一个文件夹。', '拖入一个文件。']);
+    if (/(衣柜|衣服)/.test(lower)) return pack(['打开衣柜。', '找出一件衣服。', '把它挂回衣架。']);
+    if (/(碗|厨房)/.test(lower)) return pack(['打开水龙头。', '拿起一个碗。', '冲洗碗的内侧。']);
+    return pack(['拿出一个袋子。', '找出一个最显眼的小物品。', '把它放进袋子。']);
+  }
+  const shortTask = source.slice(0, 12) || '这件事';
+  return pack(['打开备忘录。', '写下「关于' + shortTask + '」。', '随便打出5个字。']);
+}
+
+function pack(actions) {
+  return { actions, action: actions.join(' ') };
 }
 
 // ============================================
@@ -184,7 +284,7 @@ async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
         model: 'deepseek-v4-flash',
         messages,
         temperature: temperature || 0.45,
-        max_tokens: 220,
+        max_tokens: 1200,
         stream: false,
       }),
       signal: controller.signal,
@@ -205,41 +305,43 @@ function extractAction(data) {
       || data.choices?.[0]?.text?.trim()
       || data.output_text?.trim()
       || '';
-  // Try JSON parse for array format
+
+  const valid = arr => Array.isArray(arr) && arr.length === 3 && arr.every(x => typeof x === 'string' && x.trim());
+  const pack = arr => ({ actions: arr.map(x => String(x).trim()), action: arr.map(x => String(x).trim()).join(' ') });
+
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length === 3) {
-      return { actions: parsed, action: parsed.join(' ') };
-    }
+    if (valid(parsed)) return pack(parsed);
   } catch {}
-  // Try extracting JSON array from text
-  const match = raw.match(/\[[\s\S]*?\]/);
-  if (match) {
-    // Fix common JSON issues: unescaped inner double quotes
-    let jsonStr = match[0];
-    // Replace inner " inside strings (e.g. 名为"周报"的 → 名为「周报」的)
-    jsonStr = jsonStr.replace(/(?<=[^,\[\]"])\"([^\"]*?)\"(?=[^,\[\]"])/g, '「$1」');
-    // Also handle cases where quotes are embedded between text
-    jsonStr = jsonStr.replace(/""/g, '\\"\\"');
+
+  const bracketStart = raw.indexOf('[');
+  const arrayMatch = raw.match(/\[[\s\S]*\]/);
+  if (arrayMatch || bracketStart !== -1) {
+    const text = arrayMatch ? arrayMatch[0] : raw.slice(bracketStart);
     try {
-      const parsed = JSON.parse(jsonStr);
-      if (Array.isArray(parsed) && parsed.length === 3) {
-        return { actions: parsed, action: parsed.join(' ') };
-      }
+      const parsed = JSON.parse(text);
+      if (valid(parsed)) return pack(parsed);
     } catch {}
-    // Try fallback: split by "," and clean
-    try {
-      const parts = jsonStr.replace(/^\[|\]$/g, '').split('","').map(s => s.replace(/^"|"$/g, '').trim()).filter(Boolean);
-      if (parts.length === 3) return { actions: parts, action: parts.join(' ') };
-    } catch {}
+
+    const quoted = [];
+    const re = /"((?:[^"\\]|\\.)*)"/g;
+    let m;
+    while ((m = re.exec(text)) && quoted.length < 3) {
+      quoted.push(m[1].replace(/\\"/g, '"').trim());
+    }
+    if (valid(quoted)) return pack(quoted);
   }
-  // Fallback: treat whole text as single action
-  return { actions: [raw, '', ''], action: raw };
+
+  const lines = raw
+    .split(/\n+/)
+    .map(line => line.replace(/^\s*(?:\d+|[一二三]|第[一二三]步)[.、.)）]?\s*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 3);
+  if (valid(lines)) return pack(lines);
+
+  return { actions: [], action: '' };
 }
 
-// ============================================
-// 打印 DeepSeek 响应日志（不含 API Key）
-// ============================================
 function logDeepSeekResponse(label, data) {
   const choice = data.choices?.[0];
   console.log(`[DeepSeek ${label}] id=${data.id} model=${data.model} finish_reason=${choice?.finish_reason} usage=${JSON.stringify(data.usage)} content_length=${(choice?.message?.content || '').length}`);
