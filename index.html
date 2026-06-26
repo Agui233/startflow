@@ -799,11 +799,13 @@
         .slice(0, 24) || '这件事';
     }
 
-    function fallbackActions(task) {
+    function fallbackActions(task, tools) {
       const raw = normalizeTask(task);
       const lower = raw.toLowerCase();
+      const context = (raw + '\n' + String(tools || '')).toLowerCase();
       const pack = a => a;
 
+      if (/(邮箱|邮件|收件箱|未读)/.test(context) && /(批量|筛选|过滤|分类|归档|整理|全选|搜索)/.test(context)) return pack(['打开邮箱收件箱。', '点开搜索或筛选入口。', '输入一个最明显的发件人或关键词。']);
       if (/(查看|处理|清理|读|看).*(邮箱|邮件|收件箱|未读)|(邮箱|邮件|收件箱|未读).*(太多|五百|几百|未读|积压|爆满)/.test(lower)) return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
       if (/(睡|午觉|小睡|休息|躺一会|补觉)/.test(lower)) return pack(['关掉手机屏幕。', '拉上窗帘。', '躺到枕头上。']);
       if (/(上厕所|厕所|卫生间|洗手间|马桶|小便|大便|尿尿|拉屎)/.test(lower)) return pack(['站起来。', '走向卫生间。', '把手放到门把手上。']);
@@ -847,17 +849,17 @@
     const FORBIDDEN_PATTERNS = [/规划/, /拆解/, /构思/, /列出/, /梳理/, /评估/, /思考/, /研究/, /复盘/, /总结/, /步骤/, /首先/, /建议/, /计划/, /分析(?!能力)/];
     const OVERSCALE_PATTERNS = [/完成/, /做完/, /写完/, /整理所有/, /全部/, /整个/, /所有资料/, /所有文件/, /学完/, /跑完/, /发出去/, /发送/, /提交/];
 
-    function validateActions(actions, task) {
-      if (!Array.isArray(actions) || actions.length !== 3) return { valid: false, reason: '不是三步数组', fallback: fallbackActions(task) };
+    function validateActions(actions, task, tools) {
+      if (!Array.isArray(actions) || actions.length !== 3) return { valid: false, reason: '不是三步数组', fallback: fallbackActions(task, tools) };
       const cleaned = actions.map(a => String(a || '').trim());
       for (let i = 0; i < cleaned.length; i++) {
         const a = cleaned[i];
-        if (!a) return { valid: false, reason: '空动作', fallback: fallbackActions(task) };
-        if (a.includes('\n') || a.includes('\r')) return { valid: false, reason: '换行', fallback: fallbackActions(task) };
-        if (FORBIDDEN_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '禁用词', fallback: fallbackActions(task) };
+        if (!a) return { valid: false, reason: '空动作', fallback: fallbackActions(task, tools) };
+        if (a.includes('\n') || a.includes('\r')) return { valid: false, reason: '换行', fallback: fallbackActions(task, tools) };
+        if (FORBIDDEN_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '禁用词', fallback: fallbackActions(task, tools) };
         const clean = a.replace(/[\s，。、；：！？""''（）【】《》—…·]/g, '').length;
-        if (clean > 45) return { valid: false, reason: '超长', fallback: fallbackActions(task) };
-        if (OVERSCALE_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '动作过大', fallback: fallbackActions(task) };
+        if (clean > 45) return { valid: false, reason: '超长', fallback: fallbackActions(task, tools) };
+        if (OVERSCALE_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '动作过大', fallback: fallbackActions(task, tools) };
       }
       return { valid: true, actions: cleaned };
     }
@@ -882,7 +884,7 @@
     function applyGeneratedActions(data, validationContext) {
       if (!data.action && !Array.isArray(data.actions)) throw new Error('返回数据异常');
       currentActions = Array.isArray(data.actions) ? data.actions : [data.action];
-      let validation = validateActions(currentActions, currentTask);
+      let validation = validateActions(currentActions, currentTask, currentTools);
       if (!validation.valid) {
         currentActions = validation.fallback;
       } else {
@@ -929,7 +931,7 @@
         showView('action');
       } catch (err) {
         console.error('generateStartAction 错误:', err);
-        currentActions = fallbackActions(currentTask);
+        currentActions = fallbackActions(currentTask, currentTools);
         currentAction = currentActions.join(' ');
         renderActions(currentActions);
         actionTask.textContent = '「' + currentTask + '」';
@@ -942,6 +944,7 @@
     async function regenerateWithPreference() {
       const preference = preferenceInput ? preferenceInput.value.trim() : '';
       if (!preference) return;
+      currentTools = preference;
       const previous = currentActions.length ? currentActions.join(' / ') : '';
       const aiTask = '用户原始任务：' + currentTask
         + '\n上一版启动链：' + previous

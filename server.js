@@ -200,10 +200,12 @@ function generateFallbackAction(task, tools) {
   const source = cleanTask(task);
   const lower = source.toLowerCase();
   const toolHint = (tools && tools.trim()) ? tools.trim() : null;
+  const context = (source + '\n' + (toolHint || '')).toLowerCase();
 
   if (toolHint) {
     if (/Notion/i.test(toolHint)) return pack(['打开 Notion。', '新建一个空白页。', '写下「' + extractTopic(source) + '」。']);
     if (/微信|WeChat/i.test(toolHint)) return pack(['打开微信。', '点开相关聊天。', '输入对方称呼但不发送。']);
+    if (/邮箱|mail/i.test(toolHint) && /(批量|筛选|过滤|分类|归档|整理|全选|搜索)/.test(context)) return pack(['打开邮箱收件箱。', '点开搜索或筛选入口。', '输入一个最明显的发件人或关键词。']);
     if (/邮箱|mail/i.test(toolHint) && /(查看|处理|清理|读|看|未读|收件箱)/.test(lower)) return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
     if (/邮箱|mail/i.test(toolHint)) return pack(['打开邮箱。', '点开新邮件标题栏。', '输入一个无压力标题。']);
     if (/书|课本|教材/.test(toolHint)) return pack(['翻开' + toolHint + '。', '找到当前页。', '用手指触摸第一行字。']);
@@ -211,6 +213,9 @@ function generateFallbackAction(task, tools) {
     if (/瑜伽垫/.test(toolHint)) return pack(['铺开瑜伽垫。', '站到垫子边缘。', '放下手机。']);
   }
 
+  if (/(邮箱|邮件|收件箱|未读)/.test(context) && /(批量|筛选|过滤|分类|归档|整理|全选|搜索)/.test(context)) {
+    return pack(['打开邮箱收件箱。', '点开搜索或筛选入口。', '输入一个最明显的发件人或关键词。']);
+  }
   if (/(查看|处理|清理|读|看).*(邮箱|邮件|收件箱|未读)|(邮箱|邮件|收件箱|未读).*(太多|五百|几百|未读|积压|爆满)/.test(lower)) {
     return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
   }
