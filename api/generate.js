@@ -178,14 +178,14 @@ function pack(actions) {
   return { actions, action: actions.join(' ') };
 }
 
-async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
+async function callDeepSeek(apiKey, messages, temperature, timeoutMs, maxTokens = 420) {
   const c = new AbortController();
   const t = setTimeout(() => c.abort(), timeoutMs);
   try {
     const r = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-v4-flash', messages, temperature: temperature || 0.45, max_tokens: 420, stream: false }),
+      body: JSON.stringify({ model: 'deepseek-v4-flash', messages, temperature: temperature || 0.45, max_tokens: maxTokens, stream: false }),
       signal: c.signal,
     });
     clearTimeout(t); return r;
@@ -249,7 +249,7 @@ function buildResponse(actions, action, source, opts = {}) {
 module.exports = async (req, res) => {
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   try {
-    const { task, tools } = req.body || {};
+    const { task, tools, mode, previousActions } = req.body || {};
     const ts = (task || '').trim();
     const tl = (tools || '').trim();
     if (!ts) { res.status(400).json({ error: '请输入有效的任务描述' }); return; }
@@ -261,10 +261,22 @@ module.exports = async (req, res) => {
       return;
     }
 
-    const messages = [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: ts }];
+    const isRefine = mode === 'refine' || !!tl;
+    const userPrompt = isRefine
+      ? [
+          '原始任务：' + ts,
+          previousActions ? '上一版：' + (Array.isArray(previousActions) ? previousActions.join(' / ') : String(previousActions)) : '',
+          '用户补充：' + tl,
+          '根据补充重新生成更贴近当前情况的三步启动链。只输出 JSON 数组。'
+        ].filter(Boolean).join('\n')
+      : ts;
+    const messages = [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: userPrompt }];
+    const timeoutMs = isRefine ? 10000 : 8000;
+    const retryTimeoutMs = isRefine ? 8000 : 6000;
+    const maxTokens = isRefine ? 700 : 420;
     let response, rawAi = '', result;
 
-    try { response = await callDeepSeek(apiKey, messages, 0.45, 8000); }
+    try { response = await callDeepSeek(apiKey, messages, 0.45, timeoutMs, maxTokens); }
     catch (err) {
       const fb = generateFallbackAction(ts, tl);
       res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: `API 网络异常: ${err.code||err.message}`, raw: '', final: fb.actions, warning: 'AI 请求异常，已使用本地保底动作' }));
@@ -282,7 +294,7 @@ module.exports = async (req, res) => {
       }
       // 5xx retry once
       try {
-        const retry = await callDeepSeek(apiKey, messages, 0.55, 6000);
+        const retry = await callDeepSeek(apiKey, messages, 0.55, retryTimeoutMs, maxTokens);
         if (retry.ok) {
           const rd = await retry.json(); logDeepSeekResponse('retry', rd);
           rawAi = rd.choices?.[0]?.message?.content?.trim() || '';
@@ -303,7 +315,7 @@ module.exports = async (req, res) => {
     if (!result.action) {
       console.warn('DeepSeek 返回空，重试');
       try {
-        const retry = await callDeepSeek(apiKey, messages, 0.55, 6000);
+        const retry = await callDeepSeek(apiKey, messages, 0.55, retryTimeoutMs, maxTokens);
         if (retry.ok) { const rd = await retry.json(); logDeepSeekResponse('retry', rd); rawAi = rd.choices?.[0]?.message?.content?.trim()||''; result = extractAction(rd); }
       } catch {}
     }

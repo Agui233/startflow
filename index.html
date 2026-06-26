@@ -897,13 +897,13 @@
       if (validationContext === 'refine' && refineBox) refineBox.style.display = 'none';
     }
 
-    async function requestGeneratedActions(aiTask, tools, validationContext) {
+    async function requestGeneratedActions(aiTask, tools, validationContext, extraPayload) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task: aiTask, tools: tools || '' }),
+        body: JSON.stringify({ task: aiTask, tools: tools || '', ...(extraPayload || {}) }),
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
@@ -946,16 +946,14 @@
       if (!preference) return;
       currentTools = preference;
       const previous = currentActions.length ? currentActions.join(' / ') : '';
-      const aiTask = '用户原始任务：' + currentTask
-        + '\n上一版启动链：' + previous
-        + '\n用户反馈：上一版不贴近我现在的情况。'
-        + '\n用户补充的当前情况或偏好：' + preference
-        + '\n\n请基于用户补充重新判断真实卡点，重新生成 2 分钟三步启动链。不要坚持上一版方向。仍然只输出 JSON 数组。';
 
       const oldText = btnRegenerate ? btnRegenerate.textContent : '';
       try {
         if (btnRegenerate) { btnRegenerate.disabled = true; btnRegenerate.textContent = '正在重新生成…'; }
-        await requestGeneratedActions(aiTask, preference, 'refine');
+        await requestGeneratedActions(currentTask, preference, 'refine', {
+          mode: 'refine',
+          previousActions: currentActions
+        });
         resetTimer();
       } catch (err) {
         console.error('regenerateWithPreference 错误:', err);

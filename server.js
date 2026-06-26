@@ -274,7 +274,7 @@ function pack(actions) {
 // ============================================
 // 调用 DeepSeek API（带超时）
 // ============================================
-async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
+async function callDeepSeek(apiKey, messages, temperature, timeoutMs, maxTokens = 420) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -289,7 +289,7 @@ async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
         model: 'deepseek-v4-flash',
         messages,
         temperature: temperature || 0.45,
-        max_tokens: 420,
+        max_tokens: maxTokens,
         stream: false,
       }),
       signal: controller.signal,
@@ -383,6 +383,8 @@ async function handleGenerate(req, res) {
       const parsed = JSON.parse(body);
       const task = parsed.task || '';
       const tools = parsed.tools || '';
+      const mode = parsed.mode || '';
+      const previousActions = parsed.previousActions || '';
 
       if (!task || typeof task !== 'string' || task.trim().length < 1) {
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -400,16 +402,28 @@ async function handleGenerate(req, res) {
       }
 
       // 构建消息
+      const isRefine = mode === 'refine' || !!tools;
+      const userPrompt = isRefine
+        ? [
+            '原始任务：' + task,
+            previousActions ? '上一版：' + (Array.isArray(previousActions) ? previousActions.join(' / ') : String(previousActions)) : '',
+            '用户补充：' + tools,
+            '根据补充重新生成更贴近当前情况的三步启动链。只输出 JSON 数组。'
+          ].filter(Boolean).join('\n')
+        : task;
       const messages = [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: task },
+        { role: 'user', content: userPrompt },
       ];
+      const timeoutMs = isRefine ? 10000 : 8000;
+      const retryTimeoutMs = isRefine ? 8000 : 6000;
+      const maxTokens = isRefine ? 700 : 420;
 
       // 第一次调用
       let response;
       let rawAiOutput = '';
       try {
-        response = await callDeepSeek(apiKey, messages, 0.45, 8000);
+        response = await callDeepSeek(apiKey, messages, 0.45, timeoutMs, maxTokens);
       } catch (err) {
         console.error(`DeepSeek 调用异常:`, err.code || err.message);
         const fb = generateFallbackAction(task, tools);
@@ -436,7 +450,7 @@ async function handleGenerate(req, res) {
         // 5xx → 重试一次
         console.warn('DeepSeek 5xx，重试一次');
         try {
-          const retryResp = await callDeepSeek(apiKey, messages, 0.55, 6000);
+          const retryResp = await callDeepSeek(apiKey, messages, 0.55, retryTimeoutMs, maxTokens);
           if (retryResp.ok) {
             const retryData = await retryResp.json();
             logDeepSeekResponse('retry', retryData);
@@ -467,7 +481,7 @@ async function handleGenerate(req, res) {
       if (!result.action) {
         console.warn('DeepSeek 返回空内容，重试一次');
         try {
-          const retryResp = await callDeepSeek(apiKey, messages, 0.55, 6000);
+          const retryResp = await callDeepSeek(apiKey, messages, 0.55, retryTimeoutMs, maxTokens);
           if (retryResp.ok) {
             const retryData = await retryResp.json();
             logDeepSeekResponse('retry', retryData);
