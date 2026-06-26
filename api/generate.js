@@ -180,7 +180,7 @@ async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
     const r = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify({ model: 'deepseek-v4-flash', messages, temperature: temperature || 0.45, max_tokens: 1200, stream: false }),
+      body: JSON.stringify({ model: 'deepseek-v4-flash', messages, temperature: temperature || 0.45, max_tokens: 420, stream: false }),
       signal: c.signal,
     });
     clearTimeout(t); return r;
@@ -259,7 +259,7 @@ module.exports = async (req, res) => {
     const messages = [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: ts }];
     let response, rawAi = '', result;
 
-    try { response = await callDeepSeek(apiKey, messages, 0.45, 12000); }
+    try { response = await callDeepSeek(apiKey, messages, 0.45, 8000); }
     catch (err) {
       const fb = generateFallbackAction(ts, tl);
       res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: `API 网络异常: ${err.code||err.message}`, raw: '', final: fb.actions, warning: 'AI 请求异常，已使用本地保底动作' }));
@@ -277,7 +277,7 @@ module.exports = async (req, res) => {
       }
       // 5xx retry once
       try {
-        const retry = await callDeepSeek(apiKey, messages, 0.55, 12000);
+        const retry = await callDeepSeek(apiKey, messages, 0.55, 6000);
         if (retry.ok) {
           const rd = await retry.json(); logDeepSeekResponse('retry', rd);
           rawAi = rd.choices?.[0]?.message?.content?.trim() || '';
@@ -298,7 +298,7 @@ module.exports = async (req, res) => {
     if (!result.action) {
       console.warn('DeepSeek 返回空，重试');
       try {
-        const retry = await callDeepSeek(apiKey, messages, 0.55, 12000);
+        const retry = await callDeepSeek(apiKey, messages, 0.55, 6000);
         if (retry.ok) { const rd = await retry.json(); logDeepSeekResponse('retry', rd); rawAi = rd.choices?.[0]?.message?.content?.trim()||''; result = extractAction(rd); }
       } catch {}
     }
