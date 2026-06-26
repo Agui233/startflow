@@ -1,263 +1,178 @@
-// ============================================
-// StartFlow — Vercel Serverless Function
-// POST /api/generate
-// ============================================
+// StartFlow — Vercel Serverless: POST /api/generate
 
-// ============================================
-// SYSTEM_PROMPT — 产品核心规则，不要改写
-// ============================================
-const SYSTEM_PROMPT = `
-你是一个行为启动翻译器。你的唯一任务是把用户输入的拖延任务翻译成一句极小的物理启动动作。
+const SYSTEM_PROMPT = `你是 StartFlow 的行为启动翻译器。你的任务：把用户正在拖延的一件事，翻译成 3 个连续、极小、可立即执行的身体或手指动作。
 
-你的职责：
-- 判断用户输入的任务类型
-- 提取任务中可触碰的具体对象
-- 选择一个极小动作模板
-- 输出一句物理启动动作
+目标：让用户在 2 分钟内接触任务现场，跨过开始前的阻力。
 
-# 核心心法
-你不是给建议，不是分析任务，不是制定计划。
-你的目标不是让用户完成任务，而是让用户的手指或身体先动起来。
-禁止出现"思考类"动词。
-每类任务都对应一个固定动作句式，不要自由发挥。
+# 核心原则（必须遵守）
+1. 输出必须且只输出 3 个动作。
+2. 每个动作必须非常小。
+3. 3 个动作必须在 2 分钟内按顺序完成。
+4. 动作只负责启动，不负责完成任务。
+5. 优先让用户接触真实任务现场。
+6. 如果用户提供了常用条件，优先围绕常用条件生成。
+7. 没有常用条件时，不要虚构具体文件、联系人、账号、页码。
+8. 可以自然使用用户原话里的具体名词。
+9. 第 3 个动作应留下一个微小但可感知的进展标记。
+10. 避免机器模板感。
 
-# 绝对禁忌
-1. 绝对禁止使用这些词：分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结、步骤、首先、建议、计划。
-2. 绝对禁止输出计划、步骤列表、原因解释、心理建设建议或多个方案。
-3. 绝对禁止输出任何前缀和后缀，例如"你的第一步是：""建议你""你可以""祝你成功"。
-4. 绝对禁止让用户完成完整任务或过大的动作（如"完成报告""写完邮件""整理所有资料"）。
-5. 绝对禁止输出超过一个动作链。
+# 绝对禁止
+- 禁止分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结。
+- 禁止输出计划、原因解释、心理建议、多个方案。
+- 禁止要求完成完整任务。
+- 禁止使用"首先""建议""计划""步骤"。
+- 禁止让用户写完整邮件、发出消息、完成报告、整理全部、学完、跑完。
+- 高情绪沟通任务中，禁止要求发送实质内容——只能打开、定位、输入无压力内容或让光标停住。
 
-# 强制动作词
-你必须且必须使用以下身体或手指动作词之一：
-打开、拿出、触摸、按下、写下、写出、打出、输入、放进、系上、翻到、找出、右键、点开、移动
-
-每次输出必须包含至少一个上述动作词。
-
-# 分类映射模板
-
-【空白创造类】
-触发词：写、画、设计、码代码、做PPT、做方案、写文案、写报告、做海报、剪视频、做视频、写论文、作品集、做幻灯片
-模板：打开[具体软件或文档]，只打出[标题、文件名或日期]。
-
-【物理整理类】
-触发词：收拾、打扫、搬家、整理、清理、归档、洗衣服、刷碗、发票、文件、文件夹、储物
-模板：拿出[一个容器或工具]，只把[1个最小单位物品]放进去。
-
-【沟通类】
-触发词：联系、汇报、发邮件、发消息、打电话、找客户、问人、回复、通知、沟通
-模板：打开[沟通工具]，只在输入框打出[对方称呼或一句无意义开头]。
-
-【高情绪阻力沟通类】
-触发词：拖延很久、不敢联系、愧疚、害怕、尴尬、客户、老板、前任、道歉、催、报价单
-模板：打开[沟通工具]，只输入[对方名字首字母或号码前3位]，然后停止，光标闪烁3秒。
-
-【身体行动类】
-触发词：跑步、锻炼、运动、健身、瑜伽、冥想、跳舞、散步、拉伸
-模板：找出[工具或装备]，让身体接触它，只做[1个惯性动作]。
-
-【学习输入类】
-触发词：看书、学习、背单词、学英语、读资料、阅读、看论文、学Python、学编程、上课、听课
-模板：打开[书、资料、课程或软件]，只翻到第一页、点开第一课或触摸第一行字。
-
-【抽象目标类】
-触发词：提升自己、找灵感、人生方向、做副业、变好、变自律、改变现状、迷茫、成长
-模板：打开备忘录，写下"关于[任务]"的第一念，然后打出3个略相关的词。
-
-【无法判断类】
-适用于无法归入以上任何类的任务。
-模板：打开备忘录，写下"关于[任务]的第一念"，然后随便打5个字。
+# 每个动作必须包含至少一个物理动作词
+打开、拿出、触摸、按下、写下、打出、输入、放进、系上、翻到、找出、右键、点开、移动、复制、粘贴、选中、拖入、放下、站到、坐下、穿上
 
 # 输出格式
-只输出一句话。
-20字以内。不要引号。不要加粗。不要换行。不要编号。除了句号不要使用多余标点。
+只返回 JSON 数组，长度 3。不要 Markdown，不要对象，不要解释，不要编号，不要前后缀。
+示例：["打开上周的周报文件。","复制标题到新文档。","粘贴日期。"]
+动作字符串内不要使用双引号，可以用「」或省略。
 `.trim();
 
-// ============================================
-// 本地保底动作生成
-// ============================================
 function generateFallbackAction(task, tools) {
   const lower = task.toLowerCase();
   const toolHint = (tools && tools.trim()) ? tools.trim() : null;
-
+  let a1, a2, a3;
   if (toolHint) {
-    if (toolHint.includes('Notion') || toolHint.includes('notion')) return `打开 Notion，只新建一个空白页。`;
-    if (toolHint.includes('手机') || toolHint.includes('iPhone') || toolHint.includes('ipad') || toolHint.includes('iPad')) return `拿起${toolHint}，只打开相关应用。`;
-    if (toolHint.includes('电脑') || toolHint.includes('Mac') || toolHint.includes('mac')) return `打开电脑，只启动相关软件。`;
-    if (toolHint.includes('美团') || toolHint.includes('饿了么')) return `打开${toolHint}，只浏览第一个推荐。`;
-    if (toolHint.includes('微信') || toolHint.includes('WeChat')) return `打开微信，只输入对方称呼。`;
-    if (toolHint.includes('邮箱') || toolHint.includes('mail')) return `打开邮箱，只写一个标题。`;
-    if (toolHint.includes('书') || toolHint.includes('课本') || toolHint.includes('教材')) return `翻开${toolHint}，用手指触摸第一行字。`;
-    if (toolHint.includes('瑜伽垫')) return `铺开瑜伽垫，站到垫子边缘。`;
-    if (toolHint.includes('跑鞋') || toolHint.includes('运动鞋')) return `找出${toolHint}，系上左脚鞋带。`;
-    return `拿出${toolHint}，只做一个最小动作。`;
+    if (toolHint.includes('Notion')) { a1='打开 Notion。'; a2='新建一个空白页。'; a3='只写一个标题。'; }
+    else if (toolHint.includes('手机') || toolHint.includes('iPhone')) { a1=`拿起${toolHint}。`; a2='打开相关应用。'; a3='只看第一屏。'; }
+    else if (toolHint.includes('电脑') || toolHint.includes('Mac')) { a1='打开电脑。'; a2='启动相关软件。'; a3='新建一个空白文件。'; }
+    else if (toolHint.includes('微信') || toolHint.includes('WeChat')) { a1='打开微信。'; a2='找到对方的聊天。'; a3='只输入对方称呼。'; }
+    else if (toolHint.includes('邮箱') || toolHint.includes('mail')) { a1='打开邮箱。'; a2='点新建邮件。'; a3='只写一个标题。'; }
+    else if (toolHint.includes('书') || toolHint.includes('课本')) { a1=`翻开${toolHint}。`; a2='找到第一页。'; a3='用手指触摸第一行字。'; }
+    else if (toolHint.includes('跑鞋') || toolHint.includes('运动鞋')) { a1=`找出${toolHint}。`; a2='穿上一只。'; a3='系上鞋带。'; }
+    else if (toolHint.includes('瑜伽垫')) { a1='铺开瑜伽垫。'; a2='站到垫子边缘。'; a3='闭上眼睛深呼吸一次。'; }
+    else { a1=`拿出${toolHint}。`; a2='放在手边。'; a3='做一个最小动作。'; }
+  } else if (/写|报告|文案|PPT|方案|代码|设计|论文|周报/.test(lower)) {
+    a1='打开一个空白文档。'; a2='只打出任务标题。'; a3='把日期改成今天。';
+  } else if (/发邮件|发消息|联系|客户|老板|同事|回复|微信/.test(lower)) {
+    a1='打开聊天或邮箱。'; a2='找到相关联系人。'; a3='只输入对方称呼。';
+  } else if (/跑步|运动|锻炼|健身/.test(lower)) {
+    a1='找出运动鞋。'; a2='穿上一只。'; a3='系上左脚鞋带。';
+  } else if (/看书|学习|背单词|读资料|阅读/.test(lower)) {
+    a1='打开学习资料。'; a2='翻到第一页。'; a3='用手指触摸第一行字。';
+  } else if (/收拾|整理|打扫|清理|归档/.test(lower)) {
+    a1='拿出一个袋子。'; a2='找一个最小物品。'; a3='把它放进去。';
+  } else {
+    a1='打开备忘录。'; a2=`写下关于${task.slice(0,10)}。`; a3='随便打出5个字。';
   }
-
-  if (/写|报告|文案|PPT|方案|做ppt|代码|设计|论文|周报/.test(lower)) return `打开一个空白文档，只打出任务标题。`;
-  if (/发邮件|发消息|联系|客户|老板|同事|回复|微信/.test(lower)) return `打开聊天或邮箱，只输入对方称呼。`;
-  if (/跑步|运动|锻炼|健身/.test(lower)) return `找出运动鞋，系上左脚鞋带。`;
-  if (/看书|学习|背单词|读资料|阅读|读书/.test(lower)) return `打开学习资料，用手指触摸第一行字。`;
-  if (/收拾|整理|打扫|清理|归档|发票|文件夹/.test(lower)) return `拿出一个袋子，只放进一个物品。`;
-  if (/瑜伽|冥想/.test(lower)) return `铺开垫子，坐下来闭上眼。`;
-
-  return `打开备忘录，写下关于这个任务的第一念。`;
+  return { actions: [a1, a2, a3].filter(Boolean), action: [a1, a2, a3].filter(Boolean).join(' ') };
 }
 
-// ============================================
-// 调用 DeepSeek API（带超时）
-// ============================================
 async function callDeepSeek(apiKey, messages, temperature, timeoutMs) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-
+  const c = new AbortController();
+  const t = setTimeout(() => c.abort(), timeoutMs);
   try {
-    const response = await fetch('https://api.deepseek.com/chat/completions', {
+    const r = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-v4-flash',
-        messages,
-        temperature,
-        max_tokens: 200,
-        stream: false,
-      }),
-      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({ model: 'deepseek-v4-flash', messages, temperature: temperature || 0.45, max_tokens: 220, stream: false }),
+      signal: c.signal,
     });
-    clearTimeout(timer);
-    return response;
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
+    clearTimeout(t); return r;
+  } catch (e) { clearTimeout(t); throw e; }
 }
 
-// ============================================
-// 提取 action（兼容多种返回格式）
-// ============================================
 function extractAction(data) {
-  return data.choices?.[0]?.message?.content?.trim()
-      || data.choices?.[0]?.text?.trim()
-      || data.output_text?.trim()
-      || '';
+  const raw = (data.choices?.[0]?.message?.content?.trim() || data.choices?.[0]?.text?.trim() || data.output_text?.trim() || '');
+  try { const p = JSON.parse(raw); if (Array.isArray(p) && p.length === 3) return { actions: p, action: p.join(' ') }; } catch {}
+  const m = raw.match(/\[[\s\S]*?\]/);
+  if (m) {
+    let j = m[0];
+    j = j.replace(/(?<=[^,\[\]"])\"([^\"]*?)\"(?=[^,\[\]"])/g, '「$1」');
+    try { const p = JSON.parse(j); if (Array.isArray(p) && p.length === 3) return { actions: p, action: p.join(' ') }; } catch {}
+    try { const p = j.replace(/^\[|\]$/g,'').split('","').map(s=>s.replace(/^"|"$/g,'').trim()).filter(Boolean); if (p.length===3) return { actions: p, action: p.join(' ') }; } catch {}
+  }
+  return { actions: [raw, '', ''], action: raw };
 }
 
-// ============================================
-// 打印 DeepSeek 响应日志（不含 API Key）
-// ============================================
 function logDeepSeekResponse(label, data) {
-  const choice = data.choices?.[0];
-  console.log(`[DeepSeek ${label}] id=${data.id} model=${data.model} finish_reason=${choice?.finish_reason} usage=${JSON.stringify(data.usage)} content_length=${(choice?.message?.content || '').length}`);
-  if (choice?.message?.reasoning_content) {
-    console.log(`[DeepSeek ${label}] reasoning_content_length=${choice.message.reasoning_content.length}`);
-  }
+  const c = data.choices?.[0];
+  console.log(`[DeepSeek ${label}] id=${data.id} model=${data.model} finish_reason=${c?.finish_reason} usage=${JSON.stringify(data.usage)} len=${(c?.message?.content||'').length}`);
+  if (c?.message?.reasoning_content) console.log(`[DeepSeek ${label}] reasoning_len=${c.message.reasoning_content.length}`);
 }
 
-// ============================================
-// Vercel Serverless Handler
-// ============================================
-module.exports = async (req, res) => {
-  // 只接受 POST
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
+function buildResponse(actions, action, source, opts = {}) {
+  const r = { actions, action, source: source || 'fallback', raw: opts.raw || '', reason: opts.reason || '', final: actions };
+  if (opts.warning) r.warning = opts.warning;
+  return r;
+}
 
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   try {
     const { task, tools } = req.body || {};
-    const taskStr = (task || '').trim();
-    const toolsStr = (tools || '').trim();
-
-    if (!taskStr) {
-      res.status(400).json({ error: '请输入有效的任务描述' });
-      return;
-    }
+    const ts = (task || '').trim();
+    const tl = (tools || '').trim();
+    if (!ts) { res.status(400).json({ error: '请输入有效的任务描述' }); return; }
 
     const apiKey = process.env.DEEPSEEK_API_KEY;
-
     if (!apiKey) {
-      const fallbackAction = generateFallbackAction(taskStr, toolsStr);
-      res.status(200).json({ action: fallbackAction, source: 'fallback', warning: '未配置 AI Key，已使用本地保底动作' });
+      const fb = generateFallbackAction(ts, tl);
+      res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: '未配置 API Key', raw: '', final: fb.actions, warning: '未配置 AI Key，已使用本地保底动作' }));
       return;
     }
 
-    const messages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: taskStr },
-    ];
+    const messages = [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: ts }];
+    let response, rawAi = '', result;
 
-    // 第一次调用
-    let response;
-    try {
-      response = await callDeepSeek(apiKey, messages, 0.1, 12000);
-    } catch (err) {
-      console.error(`DeepSeek 调用异常:`, err.code || err.message);
-      const fallbackAction = generateFallbackAction(taskStr, toolsStr);
-      res.status(200).json({ action: fallbackAction, source: 'fallback', warning: 'AI 请求异常，已使用本地保底动作' });
+    try { response = await callDeepSeek(apiKey, messages, 0.45, 12000); }
+    catch (err) {
+      const fb = generateFallbackAction(ts, tl);
+      res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: `API 网络异常: ${err.code||err.message}`, raw: '', final: fb.actions, warning: 'AI 请求异常，已使用本地保底动作' }));
       return;
     }
 
     if (!response.ok) {
       const status = response.status;
-      const errorText = await response.text();
-      console.error(`DeepSeek API 错误 (${status}):`, errorText);
-
+      const errText = await response.text();
+      console.error(`DeepSeek API ${status}:`, errText);
       if (status >= 400 && status < 500) {
-        const fallbackAction = generateFallbackAction(taskStr, toolsStr);
-        res.status(200).json({ action: fallbackAction, source: 'fallback', warning: `AI (${status})，已使用本地保底动作` });
+        const fb = generateFallbackAction(ts, tl);
+        res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: `API ${status} 错误`, raw: errText.slice(0,200), final: fb.actions, warning: `AI (${status})，已使用本地保底动作` }));
         return;
       }
-
-      // 5xx → 重试一次
-      console.warn('DeepSeek 5xx，重试一次');
+      // 5xx retry once
       try {
-        const retryResp = await callDeepSeek(apiKey, messages, 0.3, 12000);
-        if (retryResp.ok) {
-          const retryData = await retryResp.json();
-          logDeepSeekResponse('retry', retryData);
-          const action = extractAction(retryData);
-          if (action) {
-            res.status(200).json({ action, source: 'ai' });
-            return;
-          }
+        const retry = await callDeepSeek(apiKey, messages, 0.55, 12000);
+        if (retry.ok) {
+          const rd = await retry.json(); logDeepSeekResponse('retry', rd);
+          rawAi = rd.choices?.[0]?.message?.content?.trim() || '';
+          result = extractAction(rd);
+          if (result.action) { res.status(200).json(buildResponse(result.actions, result.action, 'ai', { raw: rawAi, final: result.actions })); return; }
         }
       } catch {}
-
-      const fallbackAction = generateFallbackAction(taskStr, toolsStr);
-      res.status(200).json({ action: fallbackAction, source: 'fallback', warning: 'AI 服务异常，已使用本地保底动作' });
+      const fb = generateFallbackAction(ts, tl);
+      res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: '5xx 重试失败', raw: rawAi, final: fb.actions, warning: 'AI 服务异常，已使用本地保底动作' }));
       return;
     }
 
-    // 2xx
     const data = await response.json();
     logDeepSeekResponse('ok', data);
-    let action = extractAction(data);
+    rawAi = data.choices?.[0]?.message?.content?.trim() || '';
+    result = extractAction(data);
 
-    // 空内容 → 重试一次
-    if (!action) {
-      console.warn('DeepSeek 返回空内容，重试一次');
+    if (!result.action) {
+      console.warn('DeepSeek 返回空，重试');
       try {
-        const retryResp = await callDeepSeek(apiKey, messages, 0.5, 12000);
-        if (retryResp.ok) {
-          const retryData = await retryResp.json();
-          logDeepSeekResponse('retry', retryData);
-          action = extractAction(retryData);
-        }
+        const retry = await callDeepSeek(apiKey, messages, 0.55, 12000);
+        if (retry.ok) { const rd = await retry.json(); logDeepSeekResponse('retry', rd); rawAi = rd.choices?.[0]?.message?.content?.trim()||''; result = extractAction(rd); }
       } catch {}
     }
 
-    if (action) {
-      res.status(200).json({ action, source: 'ai' });
-      return;
+    if (result.action) {
+      res.status(200).json(buildResponse(result.actions, result.action, 'ai', { raw: rawAi, final: result.actions }));
+    } else {
+      const fb = generateFallbackAction(ts, tl);
+      res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: 'AI 返回空或解析失败', raw: rawAi, final: fb.actions, warning: 'AI 返回空，已使用本地保底动作' }));
     }
-
-    const fallbackAction = generateFallbackAction(taskStr, toolsStr);
-    res.status(200).json({ action: fallbackAction, source: 'fallback', warning: 'AI 返回空，已使用本地保底动作' });
-
   } catch (err) {
-    console.error('generate 处理异常:', err);
-    res.status(200).json({ action: '打开备忘录，写下关于这个任务的第一念。', source: 'fallback', warning: '服务器内部错误，已使用本地保底动作' });
+    console.error('generate 异常:', err);
+    const fb = generateFallbackAction('', '');
+    res.status(200).json(buildResponse(fb.actions, fb.action, 'fallback', { reason: `服务异常: ${err.message}`, raw: '', final: fb.actions, warning: '服务器内部错误，已使用本地保底动作' }));
   }
 };
