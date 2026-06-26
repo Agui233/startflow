@@ -37,54 +37,42 @@ if (fs.existsSync(envPath)) {
 // ============================================
 // SYSTEM_PROMPT — 产品核心规则，不要改写
 // ============================================
-const SYSTEM_PROMPT = `
-你是 StartFlow 的行为启动翻译器。你的任务不是给建议、不是做计划、不是拆解任务，而是把用户正在拖延的一件事，翻译成 3 个连续、极小、具体、可立即执行的身体动作或手指动作。
+const SYSTEM_PROMPT = `你是 StartFlow 的行为启动翻译器。你的任务：把用户正在拖延的一件事，翻译成 3 个连续、极小、可立即执行的身体或手指动作。
 
-你的目标：让用户在 2 分钟内接触任务现场，跨过开始前的阻力。
+目标：让用户在 2 分钟内接触任务现场，跨过开始前的阻力。
 
-你不是模板填空器。你需要根据用户原话里的具体对象、场景、工具、材料、情绪阻力和常用条件，生成贴近真实现场的启动链。
+# 核心原则（必须遵守）
+1. 输出必须且只输出 3 个动作。
+2. 每个动作必须非常小——小到用户不会找理由跳过。
+3. 3 个动作必须在 2 分钟内按顺序完成。
+4. 动作只负责启动，不负责完成任务。
+5. 优先让用户接触真实任务现场：相关文件、旧版本、聊天窗口、邮箱、输入框、资料、工具、物品、环境、上一次做到一半的材料。
+6. 如果用户提供了常用条件，优先围绕常用条件生成动作。
+7. 如果用户没有提供常用条件，不要虚构具体文件、联系人、地点、账号、章节、页码或材料。
+8. 可以自然使用用户原话里的具体名词。
+9. 第 3 个动作应留下一个具体但很小的任务痕迹——让用户停下时已经有一个可见的进展标记。
+10. 输出要像理解拖延现场的人给出的微小推动，避免任何机器模板感。
 
-核心原则：
-1. 三个动作必须都非常小，小到近乎荒谬。
-2. 三个动作必须能按顺序在 2 分钟内完成。
-3. 三个动作只负责启动，不负责完成任务。
-4. 优先让用户接触真实任务现场：相关文件、旧版本、聊天窗口、邮箱、输入框、资料、工具、物品、环境、上一次做到一半的材料。
-5. 如果用户提供了常用条件，优先围绕常用条件生成动作。
-6. 如果用户没有提供常用条件，不要虚构具体文件、联系人、地点、账号、章节、页码或材料。
-7. 可以自然使用用户原话里的具体名词，例如客户、周报、报价单、跑鞋、PPT、论文、邮箱、书、文件夹。
-8. 动作可以有现场感，不必套固定句式。
-9. 输出要像一个理解拖延现场的人给出的微小推动，而不是机器模板。
-
-绝对禁止：
+# 绝对禁止
 - 禁止分析、规划、拆解、构思、列出、梳理、评估、思考、研究、复盘、总结。
 - 禁止输出任务计划、原因解释、心理建议、多个方案。
 - 禁止要求用户完成完整任务。
 - 禁止使用"首先""建议""计划""步骤"等表达。
-- 禁止让用户写完整邮件、发出消息、完成报告、整理全部文件、学完课程、跑完步。
-- 高情绪沟通任务中，禁止要求用户发送实质内容，只能打开、定位、输入无压力内容或停住。
+- 禁止让用户：写完整邮件、发出消息、完成报告、整理全部文件、学完课程、跑完全程。
+- 高情绪沟通任务中，禁止要求用户发送任何实质内容——只能打开、定位、输入无压力内容或让光标停住。
 
-优先使用的动作词：
-打开、拿出、触摸、按下、写下、写出、打出、输入、放进、系上、翻到、找出、右键、点开、移动、复制、粘贴、选中、拖入、放下、站到、坐下、穿上
+# 动作方向参考（不是模板，不是必选项）
+让用户：打开、拿出、触摸、按下、写下、打出、输入、放进、系上、翻到、找出、右键、点开、移动、复制、粘贴、选中、拖入、放下、站到、坐下、穿上。
 
-生成方向：
+你不必每次都用这些词，但每个动作必须包含至少一个物理动作（让手指或身体真的动一下）。
 
-【空白创造类】用户可能输入写周报、写文章、做PPT、设计海报、写方案、写论文、码代码、剪视频。让用户接触旧文件、空白文档、标题、日期、文件名、素材、编辑器、画布、上一版内容。不要要求写正文、完成一页、构思大纲。
+# 关于第三步
+好的第三步不是"完成"，而是一个微小但可感知的进展：比如光标已经停在输入框里、标题已经写了一半、一个文件已经拖到了目标位置——用户停下时能看到"我已经开始了一点"。
 
-【物理整理类】用户可能输入收拾房间、整理衣柜、清理桌面、归档文件、洗碗。让用户接触一个容器、一个工具、一个最小物品。不要要求整理全部。
-
-【沟通类】用户可能输入发邮件、回复消息、联系客户、汇报、问同事。让用户打开沟通工具、点开输入框、输入称呼或标题，但不要要求发送。
-
-【高情绪阻力沟通】如果包含拖了很久、不敢联系、愧疚、害怕、尴尬、客户、老板、前任、道歉、催、报价单，要更保守：只允许打开工具、搜索对方、点开相关邮件或输入首字母，可以让光标停住，绝不要求写正文或发送。
-
-【身体行动类】用户可能输入跑步、健身、瑜伽、冥想、散步、运动。让用户接触装备或环境。不要要求完成锻炼。
-
-【学习输入类】用户可能输入看书、学习、背单词、学英语、看论文、上课。让用户接触资料或课程入口。不要要求理解、总结、学完。
-
-【抽象目标类】用户可能输入提升自己、做副业、找方向、变自律、改变现状、找灵感。使用废稿纸法：打开备忘录写下关于XXX，打出3个略相关的词。不要要求分析人生、规划方向。
-
-输出格式：
-只返回 JSON 数组。数组长度必须是 3。数组中每一项是一个动作字符串。不要返回 Markdown。不要返回对象。不要返回解释。不要返回编号。不要返回前后缀。
-示例：["打开上周周报。","复制标题到新文档。","把日期改成今天。"]
+# 输出格式
+只返回 JSON 数组。数组长度必须是 3。每一项是一个动作字符串。不要返回 Markdown。不要返回对象。不要返回解释。不要返回编号。不要返回前后缀。
+示例：["打开上周的周报文件。","复制标题到新文档。","粘贴日期。"]
+注意：动作字符串内部不要使用双引号，可以用中文引号「」或直接省略。
 `.trim();
 
 // ============================================
@@ -227,11 +215,22 @@ function extractAction(data) {
   // Try extracting JSON array from text
   const match = raw.match(/\[[\s\S]*?\]/);
   if (match) {
+    // Fix common JSON issues: unescaped inner double quotes
+    let jsonStr = match[0];
+    // Replace inner " inside strings (e.g. 名为"周报"的 → 名为「周报」的)
+    jsonStr = jsonStr.replace(/(?<=[^,\[\]"])\"([^\"]*?)\"(?=[^,\[\]"])/g, '「$1」');
+    // Also handle cases where quotes are embedded between text
+    jsonStr = jsonStr.replace(/""/g, '\\"\\"');
     try {
-      const parsed = JSON.parse(match[0]);
+      const parsed = JSON.parse(jsonStr);
       if (Array.isArray(parsed) && parsed.length === 3) {
         return { actions: parsed, action: parsed.join(' ') };
       }
+    } catch {}
+    // Try fallback: split by "," and clean
+    try {
+      const parts = jsonStr.replace(/^\[|\]$/g, '').split('","').map(s => s.replace(/^"|"$/g, '').trim()).filter(Boolean);
+      if (parts.length === 3) return { actions: parts, action: parts.join(' ') };
     } catch {}
   }
   // Fallback: treat whole text as single action
@@ -247,6 +246,22 @@ function logDeepSeekResponse(label, data) {
   if (choice?.message?.reasoning_content) {
     console.log(`[DeepSeek ${label}] reasoning_content_length=${choice.message.reasoning_content.length}`);
   }
+}
+
+// ============================================
+// 构建诊断响应
+// ============================================
+function buildResponse(actions, action, source, opts = {}) {
+  const resp = {
+    actions,
+    action,
+    source: source || 'fallback',
+    raw: opts.raw || '',
+    reason: opts.reason || '',
+    final: actions,
+  };
+  if (opts.warning) resp.warning = opts.warning;
+  return resp;
 }
 
 // ============================================
@@ -270,10 +285,10 @@ async function handleGenerate(req, res) {
 
       const apiKey = process.env.DEEPSEEK_API_KEY;
       if (!apiKey) {
-        // 没有 API Key 时直接返回本地保底
         const fb = generateFallbackAction(task, tools);
+        const resp = buildResponse(fb.actions, fb.action, 'fallback', { reason: '未配置 API Key', raw: '', final: fb.actions, warning: '未配置 AI Key，已使用本地保底动作' });
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ actions: fb.actions, action: fb.action, source: 'fallback', warning: '未配置 AI Key，已使用本地保底动作' }));
+        res.end(JSON.stringify(resp));
         return;
       }
 
@@ -285,16 +300,19 @@ async function handleGenerate(req, res) {
 
       // 第一次调用
       let response;
+      let rawAiOutput = '';
       try {
-        response = await callDeepSeek(apiKey, messages, 0.1, 12000);
+        response = await callDeepSeek(apiKey, messages, 0.45, 12000);
       } catch (err) {
         console.error(`DeepSeek 调用异常:`, err.code || err.message);
         const fb = generateFallbackAction(task, tools);
+        const resp = buildResponse(fb.actions, fb.action, 'fallback', { reason: `API 网络异常: ${err.code || err.message}`, raw: '', final: fb.actions, warning: 'AI 请求异常，已使用本地保底动作' });
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ actions: fb.actions, action: fb.action, source: 'fallback', warning: 'AI 请求异常，已使用本地保底动作' }));
+        res.end(JSON.stringify(resp));
         return;
       }
 
+      // 处理非 2xx
       if (!response.ok) {
         const status = response.status;
         const errorText = await response.text();
@@ -302,64 +320,74 @@ async function handleGenerate(req, res) {
 
         if (status >= 400 && status < 500) {
           const fb = generateFallbackAction(task, tools);
+          const resp = buildResponse(fb.actions, fb.action, 'fallback', { reason: `API ${status} 错误`, raw: errorText.slice(0, 200), final: fb.actions, warning: `AI (${status})，已使用本地保底动作` });
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ actions: fb.actions, action: fb.action, source: 'fallback', warning: `AI (${status})，已使用本地保底动作` }));
+          res.end(JSON.stringify(resp));
           return;
         }
 
+        // 5xx → 重试一次
         console.warn('DeepSeek 5xx，重试一次');
         try {
-          const retryResp = await callDeepSeek(apiKey, messages, 0.3, 12000);
+          const retryResp = await callDeepSeek(apiKey, messages, 0.55, 12000);
           if (retryResp.ok) {
             const retryData = await retryResp.json();
             logDeepSeekResponse('retry', retryData);
+            rawAiOutput = retryData.choices?.[0]?.message?.content?.trim() || '';
             const result = extractAction(retryData);
             if (result.action) {
+              const resp = buildResponse(result.actions, result.action, 'ai', { raw: rawAiOutput, final: result.actions });
               res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-              res.end(JSON.stringify({ actions: result.actions, action: result.action, source: 'ai' }));
+              res.end(JSON.stringify(resp));
               return;
             }
           }
         } catch {}
         const fb = generateFallbackAction(task, tools);
+        const resp = buildResponse(fb.actions, fb.action, 'fallback', { reason: '5xx 重试失败', raw: rawAiOutput, final: fb.actions, warning: 'AI 服务异常，已使用本地保底动作' });
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ actions: fb.actions, action: fb.action, source: 'fallback', warning: 'AI 服务异常，已使用本地保底动作' }));
+        res.end(JSON.stringify(resp));
         return;
       }
 
       // 2xx → 解析
       const data = await response.json();
       logDeepSeekResponse('ok', data);
+      rawAiOutput = data.choices?.[0]?.message?.content?.trim() || '';
       let result = extractAction(data);
 
       // 空内容 → 重试一次
       if (!result.action) {
         console.warn('DeepSeek 返回空内容，重试一次');
         try {
-          const retryResp = await callDeepSeek(apiKey, messages, 0.5, 12000);
+          const retryResp = await callDeepSeek(apiKey, messages, 0.55, 12000);
           if (retryResp.ok) {
             const retryData = await retryResp.json();
             logDeepSeekResponse('retry', retryData);
+            rawAiOutput = retryData.choices?.[0]?.message?.content?.trim() || '';
             result = extractAction(retryData);
           }
         } catch {}
       }
 
       if (result.action) {
+        const resp = buildResponse(result.actions, result.action, 'ai', { raw: rawAiOutput, final: result.actions });
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify({ actions: result.actions, action: result.action, source: 'ai' }));
+        res.end(JSON.stringify(resp));
         return;
       }
 
       const fb = generateFallbackAction(task, tools);
+      const resp = buildResponse(fb.actions, fb.action, 'fallback', { reason: 'AI 返回内容为空或解析失败', raw: rawAiOutput, final: fb.actions, warning: 'AI 返回空，已使用本地保底动作' });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ actions: fb.actions, action: fb.action, source: 'fallback', warning: 'AI 返回空，已使用本地保底动作' }));
+      res.end(JSON.stringify(resp));
 
     } catch (err) {
       console.error('generate 处理异常:', err);
       const fb = generateFallbackAction('', '');
+      const resp = buildResponse(fb.actions, fb.action, 'fallback', { reason: `服务异常: ${err.message}`, raw: '', final: fb.actions, warning: '服务器内部错误，已使用本地保底动作' });
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ actions: fb.actions, action: fb.action, source: 'fallback', warning: '服务器内部错误，已使用本地保底动作' }));
+      res.end(JSON.stringify(resp));
     }
   });
 }
