@@ -807,6 +807,7 @@
       if (/(查看|处理|清理|读|看).*(邮箱|邮件|收件箱|未读)|(邮箱|邮件|收件箱|未读).*(太多|五百|几百|未读|积压|爆满)/.test(lower)) return pack(['打开邮箱收件箱。', '点开最上面一封未读邮件。', '只读邮件标题和第一行。']);
       if (/(睡|午觉|小睡|休息|躺一会|补觉)/.test(lower)) return pack(['关掉手机屏幕。', '拉上窗帘。', '躺到枕头上。']);
       if (/(上厕所|厕所|卫生间|洗手间|马桶|小便|大便|尿尿|拉屎)/.test(lower)) return pack(['站起来。', '走向卫生间。', '把手放到门把手上。']);
+      if (/(出门|外出|下楼|去外面|离开家|出发)/.test(lower)) return pack(['站起来走到门口。', '拿起钥匙或手机。', '把一只脚伸进鞋里。']);
       if (/(行李|打包|旅行|旅游|出差|回家|箱子|行李箱|背包|护照|证件|充电器|洗漱)/.test(lower)) return pack(['找出行李箱。', '拉开箱子拉链。', '放进一件最容易拿到的衣服。']);
       if (/(起诉|诉讼|法院|律师|证据|材料|资料|合同|发票|报销|申请|文件|文档)/.test(lower)) {
         if (/(起诉|诉讼|法院|律师|证据)/.test(lower)) return pack(['打开起诉材料文件夹。', '新建一个「待整理」文件夹。', '拖入一个相关文件。']);
@@ -843,7 +844,6 @@
       return pack(['打开备忘录。', '写下「关于' + shortTask + '」。', '随便打出5个字。']);
     }
 
-    const PHYSICAL_ACTION_WORDS = ['打开', '拿出', '触摸', '按下', '写下', '写出', '打出', '输入', '放进', '放到', '装进', '塞进', '系上', '翻到', '找出', '找到', '定位', '右键', '点开', '点击', '进入', '移动', '滚动', '滑到', '复制', '粘贴', '选中', '拖入', '拖到', '拉开', '拉上', '放下', '停住', '停下', '站到', '站起', '起来', '走向', '走到', '走进', '坐下', '坐到', '蹲下', '蹲到', '躺下', '躺到', '穿上', '脱下', '改成', '新建', '读出', '关上', '关掉', '打在'];
     const FORBIDDEN_PATTERNS = [/规划/, /拆解/, /构思/, /列出/, /梳理/, /评估/, /思考/, /研究/, /复盘/, /总结/, /步骤/, /首先/, /建议/, /计划/, /分析(?!能力)/];
     const OVERSCALE_PATTERNS = [/完成/, /做完/, /写完/, /整理所有/, /全部/, /整个/, /所有资料/, /所有文件/, /学完/, /跑完/, /发出去/, /发送/, /提交/];
 
@@ -857,7 +857,6 @@
         if (FORBIDDEN_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '禁用词', fallback: fallbackActions(task) };
         const clean = a.replace(/[\s，。、；：！？""''（）【】《》—…·]/g, '').length;
         if (clean > 45) return { valid: false, reason: '超长', fallback: fallbackActions(task) };
-        if (i < 2 && !PHYSICAL_ACTION_WORDS.some(w => a.includes(w))) return { valid: false, reason: '缺动作词', fallback: fallbackActions(task) };
         if (OVERSCALE_PATTERNS.some(p => p.test(a))) return { valid: false, reason: '动作过大', fallback: fallbackActions(task) };
       }
       return { valid: true, actions: cleaned };
