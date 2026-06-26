@@ -708,9 +708,7 @@
   </div>
 
   <script>
-  console.log('StartFlow script loaded');
   (function() {
-    console.log('IIFE started');
     'use strict';
 
     // ============================================
@@ -728,6 +726,7 @@
     let history = [];
 
     const STORAGE_KEY = 'startflow_history';
+    const DEBUG_MODE = new URLSearchParams(window.location.search).get('debug') === '1';
 
     // ============================================
     // AI rules live in server.js and api/generate.js
@@ -865,6 +864,7 @@
     }
 
     function renderDebug(data, validation, finalActions) {
+      if (!DEBUG_MODE) return;
       const panel = document.getElementById('debugPanel');
       const content = document.getElementById('debugContent');
       if (!panel || !content) return;
