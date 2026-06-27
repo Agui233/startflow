@@ -1072,6 +1072,36 @@
         .slice(0, 24) || '这件事';
     }
 
+    function getRefinePlaceholder(task) {
+      var t = (task || '').toLowerCase();
+      // 优先级1: 代码/项目类
+      if (/(代码|编程|码|项目|app|应用|网页|网站|程序|系统|codex|开发|部署|git|函数|数据库|接口|前端|后端|页面|功能)/.test(t)) {
+        return '比如：项目在本地 / 我想先改首页 / 我现在不知道从哪里完善';
+      }
+      // 优先级2: 沟通类
+      if (/(邮件|沟通|联系|回复|汇报|微信|客户|老板|催|联系人|短信|消息|通知|报备|请示|申请|报价).*(?!.*(整理|收拾|文件|材料))/.test(t) || /(客户|老板|同事|领导|甲方|乙方|催|道歉|尴尬|愧疚|不敢联系)/.test(t)) {
+        return '比如：我不想现在发送 / 我只想先打开聊天 / 这个人不是客户';
+      }
+      // 优先级3: 运动/身体/出门类
+      if (/(跑步|锻炼|健身|瑜伽|冥想|散步|运动|拉伸|出门|外出|下楼|去外面|离开家|出发|午觉|小睡|睡|上厕所|洗澡|喝水|吃饭|收拾东西)/.test(t)) {
+        return '比如：我在家 / 我还没换衣服 / 我只想先站起来';
+      }
+      // 优先级4: 学习类
+      if (/(学习|阅读|看书|背单词|学英语|课程|听课|资料|论文|复习|备考|考试|考研|读书|教材|课本)/.test(t)) {
+        return '比如：我用手机学习 / 我已经打开课程 / 我不想从阅读开始';
+      }
+      // 优先级5: 写作/文档类
+      if (/(写|周报|报告|方案|文案|总结|文档|ppt|PPT|教案|课件|设计|海报|画|剪视频|文章|内容|小说|稿|文字|记录|笔记|表格)/.test(t)) {
+        return '比如：我已经有草稿 / 我卡在开头 / 我想先改旧版本';
+      }
+      // 优先级6: 整理类
+      if (/(整理|收拾|清理|归档|文件|桌面|衣柜|房间|厨房|洗衣服|刷碗|打扫|搬家|收纳|材料|合同|发票|报销|申请|证件)/.test(t)) {
+        return '比如：东西在电脑里 / 我想先整理桌面 / 我现在没有袋子';
+      }
+      // 默认
+      return '比如：我现在只有手机 / 我已经做了一半 / 我不想从这一步开始';
+    }
+
     function fallbackActions(task, tools) {
       const raw = normalizeTask(task);
       const lower = raw.toLowerCase();
@@ -1484,7 +1514,10 @@
     if (btnRefineToggle && refineBox) {
       btnRefineToggle.addEventListener('click', () => {
         refineBox.style.display = refineBox.style.display === 'none' ? 'block' : 'none';
-        if (refineBox.style.display === 'block' && preferenceInput) preferenceInput.focus();
+        if (refineBox.style.display === 'block' && preferenceInput) {
+          preferenceInput.placeholder = getRefinePlaceholder(currentTask);
+          preferenceInput.focus();
+        }
       });
     }
     if (btnRegenerate) {
