@@ -364,7 +364,210 @@
     .timer-progress-bar.done { background: #5cb85c; }
     .timer-status { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
 
-    /* === VIEW 4: Feedback === */
+    /* --- Step Card (current / done / pending) --- */
+    .step-card-wrap { margin-bottom: 6px; }
+    .step-card-current {
+      background: rgba(255,255,255,0.58);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 14px;
+      padding: 22px 24px 18px;
+      transition: all 0.3s ease;
+    }
+    .step-card-current.highlight {
+      animation: stepFadeIn 0.35s ease;
+    }
+    @keyframes stepFadeIn {
+      from { opacity: 0.6; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .step-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .step-progress {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .step-timelabel {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: rgba(0,0,0,0.05);
+      padding: 2px 10px;
+      border-radius: 10px;
+    }
+    .step-card-text {
+      font-size: 20px;
+      line-height: 1.4;
+      font-weight: 550;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      padding: 0 2px;
+    }
+    .step-done-btn {
+      background: var(--btn-primary);
+      color: var(--btn-text);
+      border: none;
+      border-radius: var(--radius-btn);
+      padding: 11px 20px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: all var(--transition);
+    }
+    .step-done-btn:hover:not(:disabled) {
+      background: var(--btn-primary-hover);
+      transform: translateY(-1px);
+    }
+    .step-done-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* --- Completed step --- */
+    .step-completed {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 4px;
+      color: var(--text-muted);
+      font-size: 14px;
+      opacity: 0.6;
+    }
+    .step-completed .check-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #5cb85c;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    /* --- Next steps (pending) --- */
+    .next-steps-section {
+      margin: 12px 0 10px;
+      padding: 0 4px;
+    }
+    .next-steps-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .next-step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 4px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      opacity: 0.55;
+    }
+    .next-step-num {
+      width: 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .next-step-text {
+      overflow-wrap: anywhere;
+    }
+
+    /* --- Completed steps region (above current card) --- */
+    .completed-steps-region {
+      margin-bottom: 8px;
+    }
+
+    /* === Inline Feedback === */
+    .inline-feedback {
+      display: none;
+      margin-top: 8px;
+      padding: 20px 0 4px;
+      border-top: 1px solid var(--border);
+      animation: fadeUp 0.35s ease;
+    }
+    .inline-feedback.show { display: block; }
+    .if-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+    .if-options {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 16px;
+    }
+    .if-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: rgba(255,255,255,0.4);
+      font-size: 14px;
+    }
+    .if-option:hover {
+      border-color: var(--btn-primary);
+      background: rgba(255,104,104,0.05);
+    }
+    .if-option.selected {
+      border-color: var(--btn-primary);
+      background: rgba(255,104,104,0.08);
+    }
+    .if-option input[type="radio"] {
+      appearance: none;
+      width: 16px; height: 16px;
+      border: 2px solid var(--text-muted);
+      border-radius: 50%;
+      flex-shrink: 0;
+      position: relative;
+      transition: all var(--transition);
+    }
+    .if-option input[type="radio"]:checked {
+      border-color: var(--btn-primary);
+      background: var(--btn-primary);
+      box-shadow: inset 0 0 0 3px white;
+    }
+    .if-textarea-wrap { margin-bottom: 14px; }
+    .if-textarea-wrap label {
+      font-size: 13px;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+      color: var(--text-secondary);
+    }
+    .if-textarea-wrap textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.5);
+      resize: vertical;
+      min-height: 52px;
+      outline: none;
+    }
+    .if-textarea-wrap textarea:focus {
+      border-color: var(--btn-primary);
+    }
+    .if-submit-area { display: flex; gap: 10px; }
+    .if-submit-area .btn { flex: 1; }
+
+    /* === VIEW 4: Feedback (kept for backward compat, no longer used) === */
     .question-block { margin-bottom: 24px; }
     .question-block:last-of-type { margin-bottom: 28px; }
     .q-label {
@@ -529,17 +732,16 @@
       .timer-display { font-size: 42px; margin: 8px 0; }
       .timer-section { margin-bottom: 14px; }
       .action-motivation { font-size: 14px; line-height: 1.55; margin-bottom: 12px; }
-      .action-display { padding: 18px 12px 16px; border-radius: 12px; margin-bottom: 14px; }
-      .action-display .action-label { font-size: 13px; margin-bottom: 14px; }
-      .action-steps { gap: 7px; }
-      .action-step-item { grid-template-columns: 26px 1fr; padding: 9px 9px; gap: 7px; border-radius: 10px; }
-      .action-step-num { width: 26px; font-size: 13px; }
-      .action-step-text { font-size: 16px; line-height: 1.32; }
-      .action-display .action-task { font-size: 13px; margin-top: 14px; }
+      .step-card-current { padding: 18px 16px 14px; }
+      .step-card-text { font-size: 18px; margin-bottom: 14px; }
+      .step-timelabel { font-size: 11px; }
+      .step-progress { font-size: 12px; }
+      .next-step-item { font-size: 13px; }
+      .if-option { padding: 8px 12px; font-size: 13px; }
+      .if-textarea-wrap textarea { min-height: 44px; font-size: 13px; }
       .refine-panel { margin-bottom: 12px; }
-      .refine-box { padding: 10px; }
       .refine-box textarea { min-height: 54px; }
-      .option { padding: 8px 12px; font-size: 13px; }
+    }
     }
   </style>
 </head>
@@ -579,15 +781,34 @@
     <!-- ===== VIEW 3: 动作 + 计时 ===== -->
     <section class="view" id="view-action">
       <div class="card">
-        <p class="action-motivation">注意：这 3 个动作可能简单到荒谬。请按顺序照做。我们的目标不是完成任务，而是让你的手指或身体先动起来。</p>
-        <div class="action-display">
-          <div class="action-label">你的 2 分钟启动链</div>
-          <div class="action-steps" id="actionSteps"></div>
-          <p class="action-task" id="actionTask"></p>
+        <p class="action-motivation">注意：这 3 个动作可能简单到荒谬。我们的目标不是完成任务，而是让你的手指或身体先动起来。</p>
+
+        <!-- 已完成步骤 -->
+        <div class="completed-steps-region" id="completedSteps"></div>
+
+        <!-- 当前步骤卡片 -->
+        <div class="step-card-wrap" id="stepCardWrap">
+          <div class="step-card-current highlight" id="stepCard">
+            <div class="step-card-header">
+              <span class="step-progress" id="stepProgress">1 / 3</span>
+              <span class="step-timelabel" id="stepTimeLabel">约20秒</span>
+            </div>
+            <div class="step-card-text" id="stepCardText"></div>
+            <button class="step-done-btn" id="btnCompleteStep">做完了，下一步</button>
+          </div>
         </div>
 
+        <!-- 下方待做步骤 -->
+        <div class="next-steps-section" id="nextStepsSection">
+          <div class="next-steps-label">接下来</div>
+          <div id="nextStepsList"></div>
+        </div>
+
+        <p class="action-task" id="actionTask"></p>
+
+        <!-- Refine -->
         <div class="refine-panel" id="refinePanel">
-          <button class="refine-toggle" id="btnRefineToggle" type="button">换一个更贴近我的方式</button>
+          <button class="refine-toggle" id="btnRefineToggle" type="button">换一个更贴合我的</button>
           <div class="refine-box" id="refineBox" style="display:none;">
             <label for="preferenceInput">哪里不贴近你现在的情况？</label>
             <textarea id="preferenceInput" rows="2" maxlength="180" placeholder="比如：我已经写了一半，但不知道怎么继续 / 我习惯先列框架 / 我现在只有手机 / 我想先找旧文件改"></textarea>
@@ -601,7 +822,7 @@
         </details>
 
         <!-- Timer -->
-        <div class="timer-section">
+        <div class="timer-section" style="margin-top:6px;">
           <div class="timer-display" id="timerDisplay">
             <span id="timerMin">02</span>:<span id="timerSec">00</span>
           </div>
@@ -615,6 +836,26 @@
           <button class="btn btn-primary" id="btnStartTimer">开始 2 分钟</button>
           <button class="btn btn-ghost" id="btnDoneEarly" disabled>我已经做完了</button>
         </div>
+
+        <!-- ===== 内嵌反馈（第 3 步完成后展开） ===== -->
+        <div class="inline-feedback" id="inlineFeedback">
+          <div class="if-title">刚才做到哪里了？<span style="color:var(--btn-primary)">*</span></div>
+          <div class="if-options" id="ifOptions">
+            <label class="if-option"><input type="radio" name="ifq" value="还没开始"><span class="option-text">还没开始</span></label>
+            <label class="if-option"><input type="radio" name="ifq" value="做了第 1 步"><span class="option-text">做了第 1 步</span></label>
+            <label class="if-option"><input type="radio" name="ifq" value="做到第 2 步"><span class="option-text">做到第 2 步</span></label>
+            <label class="if-option"><input type="radio" name="ifq" value="3 步都做完了"><span class="option-text">3 步都做完了</span></label>
+            <label class="if-option"><input type="radio" name="ifq" value="做完后继续做了"><span class="option-text">做完后继续做了</span></label>
+          </div>
+          <div class="if-textarea-wrap">
+            <label>哪一步有用，或哪里不贴合？ <span style="color:var(--text-muted);font-weight:400;font-size:12px;">（选填）</span></label>
+            <textarea id="ifOpenFeedback" rows="2" placeholder="比如：第 1 步真的让我打开了文件 / 第 3 步不太适合我的情况"></textarea>
+          </div>
+          <div class="if-submit-area">
+            <button class="btn btn-primary" id="btnIfSubmit" disabled>完成</button>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -718,6 +959,7 @@
     let currentAction = '';
     let currentTools = '';
     let currentActions = [];
+    let currentStep = 0; // 0=步骤1, 1=步骤2, 2=步骤3
     let timerSeconds = 120;
     let timerRunning = false;
     let timerCompleted = false;
@@ -740,7 +982,6 @@
     const taskInput = $('taskInput');
     const charCount = $('charCount');
     const btnGetAction = $('btnGetAction');
-    const actionText = $('actionText');
     const actionTask = $('actionTask');
     const timerMin = $('timerMin');
     const timerSec = $('timerSec');
@@ -762,6 +1003,20 @@
     const refineBox = $('refineBox');
     const preferenceInput = $('preferenceInput');
     const btnRegenerate = $('btnRegenerate');
+    // Step card refs
+    const stepCard = $('stepCard');
+    const stepProgress = $('stepProgress');
+    const stepTimeLabel = $('stepTimeLabel');
+    const stepCardText = $('stepCardText');
+    const btnCompleteStep = $('btnCompleteStep');
+    const completedStepsEl = $('completedSteps');
+    const nextStepsList = $('nextStepsList');
+    const nextStepsSection = $('nextStepsSection');
+    // Inline feedback refs
+    const inlineFeedback = $('inlineFeedback');
+    const ifOptions = $('ifOptions');
+    const ifOpenFeedback = $('ifOpenFeedback');
+    const btnIfSubmit = $('btnIfSubmit');
 
     // ============================================
     // View navigation
@@ -774,14 +1029,81 @@
     }
 
     // ============================================
-    // Local fallback + validation
+    // 步骤时间标签（仅用于降低心理负担，不用于倒计时）
     // ============================================
-    function renderActions(actions) {
-      const container = document.getElementById('actionSteps');
-      if (!container) return;
-      container.innerHTML = actions.map((a, i) =>
-        '<div class="action-step-item"><span class="action-step-num">' + (i + 1) + '.</span><span class="action-step-text">' + escHtml(a) + '</span></div>'
-      ).join('');
+    const STEP_TIME_LABELS = ['约20秒', '约40秒', '约30秒'];
+
+    // ============================================
+    // Step-by-step 卡片渲染
+    // ============================================
+    function renderStepView() {
+      if (!currentActions || currentActions.length !== 3) return;
+      const step = currentStep;
+      const steps = currentActions;
+
+      // 已完成步骤列表
+      let completedHtml = '';
+      for (let i = 0; i < step; i++) {
+        completedHtml += '<div class="step-completed"><span class="check-icon">✓</span>' + escHtml(steps[i]) + '</div>';
+      }
+      if (completedStepsEl) completedStepsEl.innerHTML = completedHtml;
+
+      // 当前步骤
+      if (step < 3) {
+        if (stepProgress) stepProgress.textContent = (step + 1) + ' / 3';
+        if (stepTimeLabel) stepTimeLabel.textContent = STEP_TIME_LABELS[step] || '约30秒';
+        if (stepCardText) stepCardText.textContent = steps[step];
+        if (btnCompleteStep) {
+          btnCompleteStep.disabled = false;
+          btnCompleteStep.textContent = step < 2 ? '做完了，下一步' : '做完了';
+        }
+        if (stepCard) {
+          stepCard.classList.remove('highlight');
+          // trigger reflow for animation reset
+          void stepCard.offsetWidth;
+          stepCard.classList.add('highlight');
+        }
+      }
+
+      // 后续待做步骤
+      if (nextStepsList) {
+        let nextHtml = '';
+        for (let i = step + 1; i < 3; i++) {
+          nextHtml += '<div class="next-step-item"><span class="next-step-num">' + (i + 1) + '</span><span class="next-step-text">' + escHtml(steps[i]) + '</span></div>';
+        }
+        nextStepsList.innerHTML = nextHtml;
+      }
+      if (nextStepsSection) {
+        nextStepsSection.style.display = (step < 2) ? 'block' : 'none';
+      }
+    }
+
+    function completeStep() {
+      if (currentStep >= 2) {
+        // 第 3 步完成 → 显示内嵌反馈
+        showInlineFeedback();
+        if (btnCompleteStep) btnCompleteStep.disabled = true;
+        return;
+      }
+      currentStep++;
+      renderStepView();
+    }
+
+    function showInlineFeedback() {
+      if (inlineFeedback) {
+        inlineFeedback.classList.add('show');
+        inlineFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      // 停止计时（如果有）
+      stopTimer();
+      timerRunning = false;
+      timerCompleted = true;
+      if (timerDisplay) timerDisplay.classList.remove('running');
+      if (timerDisplay) timerDisplay.classList.add('done');
+      if (timerBar) timerBar.classList.add('done');
+      if (btnStartTimer) { btnStartTimer.textContent = '已结束'; btnStartTimer.disabled = true; }
+      if (btnDoneEarly) btnDoneEarly.disabled = true;
+      if (timerStatus) timerStatus.textContent = '完成！';
     }
 
     function normalizeTask(task) {
@@ -891,7 +1213,7 @@
         currentActions = validation.actions;
       }
       currentAction = currentActions.join(' ');
-      renderActions(currentActions);
+      renderStepView();
       actionTask.textContent = '「' + currentTask + '」';
       renderDebug(data, validation, currentActions);
       if (validationContext === 'refine' && refineBox) refineBox.style.display = 'none';
@@ -933,7 +1255,7 @@
         console.error('generateStartAction 错误:', err);
         currentActions = fallbackActions(currentTask, currentTools);
         currentAction = currentActions.join(' ');
-        renderActions(currentActions);
+        renderStepView();
         actionTask.textContent = '「' + currentTask + '」';
         renderDebug({ source: 'frontend_fallback', reason: err.message || 'Load failed', raw: '' }, { valid: false, reason: err.message || 'Load failed' }, currentActions);
         resetTimer();
@@ -980,6 +1302,13 @@
       btnStartTimer.textContent = '开始 2 分钟';
       btnStartTimer.disabled = false;
       btnDoneEarly.disabled = true;
+      currentStep = 0;
+      // 隐藏内嵌反馈
+      if (inlineFeedback) inlineFeedback.classList.remove('show');
+      document.querySelectorAll('input[name="ifq"]').forEach(r => r.checked = false);
+      document.querySelectorAll('#ifOptions .if-option').forEach(o => o.classList.remove('selected'));
+      if (ifOpenFeedback) ifOpenFeedback.value = '';
+      if (btnIfSubmit) btnIfSubmit.disabled = true;
     }
 
     function updateTimerDisplay() {
@@ -1017,10 +1346,12 @@
       timerDisplay.classList.remove('running');
       timerDisplay.classList.add('done');
       timerBar.classList.add('done');
-      btnStartTimer.textContent = '填写反馈 →';
-      btnStartTimer.disabled = false;
+      btnStartTimer.textContent = '已结束';
+      btnStartTimer.disabled = true;
       btnDoneEarly.disabled = true;
       timerStatus.textContent = '时间到！';
+      // 时间到 → 展开内嵌反馈
+      showInlineFeedback();
     }
 
     function stopTimer() {
@@ -1038,36 +1369,31 @@
       timerDisplay.classList.remove('running');
       timerDisplay.classList.add('done');
       timerBar.classList.add('done');
-      btnStartTimer.textContent = '填写反馈 →';
-      btnStartTimer.disabled = false;
+      btnStartTimer.textContent = '已结束';
+      btnStartTimer.disabled = true;
       btnDoneEarly.disabled = true;
       timerStatus.textContent = '你提前完成了！';
+      showInlineFeedback();
     }
 
     // ============================================
-    // Feedback
+    // Inline Feedback
     // ============================================
-    function collectFeedback() {
-      const q1 = document.querySelector('input[name="q1"]:checked');
-      const q2 = document.querySelector('input[name="q2"]:checked');
-      const q3 = document.querySelector('input[name="q3"]:checked');
-      const q4 = document.querySelector('input[name="q4"]:checked');
-      if (!q1 || !q2 || !q3 || !q4) {
-        feedbackError.classList.add('show');
-        return null;
-      }
-      feedbackError.classList.remove('show');
+    function collectInlineFeedback() {
+      const selected = document.querySelector('input[name="ifq"]:checked');
+      if (!selected) return null;
       return {
-        completionDepth: q1.value,
-        taskFit: q2.value,
-        resistanceChange: q3.value,
-        wouldStartWithoutPrompt: q4.value,
-        openFeedback: feedbackNote.value.trim(),
+        progressReached: selected.value,
+        openFeedback: ifOpenFeedback ? ifOpenFeedback.value.trim() : '',
+        // 向后兼容旧字段
+        completed: selected.value,
+        stateAfterAction: '',
+        chainFeeling: '',
+        taskFit: '',
+        resistanceChange: '',
+        wouldStartWithoutPrompt: '',
         actionMode: 'three_step',
         actions: currentActions,
-        completed: q1.value,
-        stateAfterAction: q3.value,
-        chainFeeling: q2.value
       };
     }
 
@@ -1097,9 +1423,6 @@
     // Summary / Thanks
     // ============================================
     function showThanks(fb) {
-      const qLabels = {
-        completionDepth: '执行深度', taskFit: '贴合度', resistanceChange: '阻力变化', wouldStartWithoutPrompt: '无提示是否会开始'
-      };
       const elapsedStr = timerElapsed < 60
         ? timerElapsed + ' 秒'
         : Math.floor(timerElapsed / 60) + ' 分 ' + (timerElapsed % 60) + ' 秒';
@@ -1122,20 +1445,8 @@
           <span class="summary-value">${elapsedStr}</span>
         </div>
         <div class="summary-row">
-          <span class="summary-label">${qLabels.completionDepth}</span>
-          <span class="summary-value">${escHtml(fb.completionDepth || fb.completed)}</span>
-        </div>
-        <div class="summary-row">
-          <span class="summary-label">${qLabels.taskFit}</span>
-          <span class="summary-value">${escHtml(fb.taskFit || fb.chainFeeling || fb.stateAfterAction)}</span>
-        </div>
-        <div class="summary-row">
-          <span class="summary-label">${qLabels.resistanceChange}</span>
-          <span class="summary-value">${escHtml(fb.resistanceChange || fb.stateAfterAction)}</span>
-        </div>
-        <div class="summary-row">
-          <span class="summary-label">${qLabels.wouldStartWithoutPrompt}</span>
-          <span class="summary-value">${escHtml(fb.wouldStartWithoutPrompt)}</span>
+          <span class="summary-label">做到哪里</span>
+          <span class="summary-value">${escHtml(fb.progressReached || fb.completed || '—')}</span>
         </div>
         ${fb.openFeedback ? `
         <div class="summary-row">
@@ -1158,7 +1469,7 @@
     // ============================================
     function exportCSV() {
       if (history.length === 0) return;
-      const headers = ['createdAt', 'task', 'action', 'actions', 'actionMode', 'durationSeconds', 'completionDepth', 'taskFit', 'resistanceChange', 'wouldStartWithoutPrompt', 'openFeedback'];
+      const headers = ['createdAt', 'task', 'action', 'actions', 'actionMode', 'durationSeconds', 'progressReached', 'completed', 'stateAfterAction', 'taskFit', 'resistanceChange', 'wouldStartWithoutPrompt', 'openFeedback'];
       const rows = history.map(e => [
         e.createdAt,
         e.task,
@@ -1166,10 +1477,12 @@
         Array.isArray(e.actions) ? e.actions.join(' / ') : '',
         e.actionMode || '',
         e.durationSeconds,
-        e.completionDepth || e.completed || '',
+        e.progressReached || e.completed || '',
+        e.completed || '',
+        e.stateAfterAction || '',
         e.taskFit || e.chainFeeling || '',
-        e.resistanceChange || e.stateAfterAction || '',
-        e.wouldStartWithoutPrompt,
+        e.resistanceChange || '',
+        e.wouldStartWithoutPrompt || '',
         e.openFeedback || ''
       ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
 
@@ -1201,7 +1514,7 @@
             <span class="hi-task">${escHtml(e.task)}</span>
           </div>
           <div class="hi-action">→ ${escHtml(e.action)}</div>
-          <div class="hi-meta">${timeStr} · 执行: ${escHtml(e.completed)}</div>
+          <div class="hi-meta">${timeStr} · ${escHtml(e.progressReached || e.completed || '—')}</div>
         </div>`;
       }).join('');
     }
@@ -1217,12 +1530,9 @@
       if (refineBox) refineBox.style.display = 'none';
       currentTools = '';
       btnGetAction.disabled = true;
-      feedbackNote.value = '';
-      feedbackError.classList.remove('show');
-      document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-      document.querySelectorAll('.option.selected').forEach(el => el.classList.remove('selected'));
       currentActions = [];
       currentAction = '';
+      currentStep = 0;
       stopTimer();
       resetTimer();
       showView('input');
@@ -1255,41 +1565,39 @@
       btnRegenerate.addEventListener('click', regenerateWithPreference);
     }
 
+    // Step card
+    btnCompleteStep.addEventListener('click', completeStep);
+
     // Timer
     btnStartTimer.addEventListener('click', () => {
-      if (timerCompleted) {
-        showView('feedback');
-        return;
-      }
-      if (!timerRunning) startTimer();
+      if (!timerRunning && !timerCompleted) startTimer();
     });
     btnDoneEarly.addEventListener('click', doneEarly);
 
-    // Options (radio click → highlight)
-    document.querySelectorAll('.options .option').forEach(opt => {
+    // Inline Feedback: 选项点击高亮
+    document.querySelectorAll('#ifOptions .if-option').forEach(opt => {
       opt.addEventListener('click', function(e) {
         const radio = this.querySelector('input[type="radio"]');
         if (!radio) return;
         radio.checked = true;
-        const group = this.closest('.options');
-        group.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        document.querySelectorAll('#ifOptions .if-option').forEach(o => o.classList.remove('selected'));
         this.classList.add('selected');
+        btnIfSubmit.disabled = false;
       });
     });
-    // Also handle native radio change events (for accessibility / keyboard nav)
-    document.querySelectorAll('input[type="radio"]').forEach(radio => {
+    document.querySelectorAll('input[name="ifq"]').forEach(radio => {
       radio.addEventListener('change', function() {
-        const label = this.closest('.option');
+        const label = this.closest('.if-option');
         if (!label) return;
-        const group = label.closest('.options');
-        group.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        document.querySelectorAll('#ifOptions .if-option').forEach(o => o.classList.remove('selected'));
         label.classList.add('selected');
+        btnIfSubmit.disabled = false;
       });
     });
 
-    // Submit feedback
-    btnSubmit.addEventListener('click', () => {
-      const fb = collectFeedback();
+    // Submit inline feedback
+    btnIfSubmit.addEventListener('click', () => {
+      const fb = collectInlineFeedback();
       if (!fb) return;
       saveToHistory(fb);
       showThanks(fb);

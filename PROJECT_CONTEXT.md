@@ -1,10 +1,10 @@
 # StartFlow Project Context
 
-Last updated: 2026-06-26
+Last updated: 2026-06-27
 
 ## Product Intent
 
-StartFlow is a behavior-start experiment tool.
+StartFlow is a behavior-start experiment tool. It is now in the demo / launch phase.
 
 The product is not trying to help users complete a task. It is trying to help users cross the first moment of resistance by giving them a tiny, concrete, immediately executable action chain.
 
@@ -18,13 +18,18 @@ Can a 2-minute chain of 3 very small actions help a user begin something they ha
 2. User enters one task.
 3. AI generates `3` tiny actions for a `2` minute start chain.
 4. User sees a notice:
-   `注意：这 3 个动作可能简单到荒谬。请按顺序照做。我们的目标不是完成任务，而是让你的手指或身体先动起来。`
-5. User can click `换一个更贴近我的方式`.
-6. Secondary prompt asks: `哪里不贴近你现在的情况？`
-7. User can explain current situation, blocker, preference, or constraint.
-8. AI regenerates a more fitting 3-step chain.
-9. User starts the 2-minute timer.
-10. User submits feedback.
+   `注意：这 3 个动作可能简单到荒谬。我们的目标不是完成任务，而是让你的手指或身体先动起来。`
+5. Steps are presented as step-by-step cards: only the current step is shown prominently, next steps are shown weakly below.
+6. User clicks `做完了，下一步` to advance through steps 1→2→3.
+7. On step 3 completion (or timer end, or "提前完成"), inline feedback expands at the bottom of the page.
+8. Feedback: 1 required question (`刚才做到哪里了？`) + 1 optional text field.
+9. User clicks `完成` → thank you page with summary.
+10. Data saved to localStorage and async-sent to Feishu.
+
+### Alternative paths to feedback
+- Step 3 completed → inline feedback
+- 2-minute timer ends → inline feedback
+- User clicks "我已经做完了" → inline feedback
 
 ## Product Principles
 
@@ -121,33 +126,33 @@ How to read diagnostics:
 
 Feedback is designed to validate whether the chain actually lowered start resistance.
 
-Current required questions:
+Feedback now lives inline on the action page (no separate View 4). It appears after step 3 completion, timer end, or "已经做完了" click.
 
-1. `你刚才执行到哪一步？`
-   - `完全没开始`
-   - `只做了第 1 步`
-   - `做到了第 2 步`
+### Current required question
+
+1. `刚才做到哪里了？`
+   - `还没开始`
+   - `做了第 1 步`
+   - `做到第 2 步`
    - `3 步都做完了`
-   - `做完后还继续做了`
-2. `这 3 个动作和你要开始的事贴合吗？`
-   - `很贴合`
-   - `基本贴合`
-   - `有点偏`
-   - `完全不相关`
-3. `做完之后，你的启动阻力变了吗？`
-   - `明显降低了`
-   - `稍微降低了`
-   - `没什么变化`
-   - `反而更抗拒了`
-4. `如果没有 StartFlow，你现在会开始吗？`
-   - `肯定不会`
-   - `大概率不会`
-   - `可能会`
-   - `本来就会`
+   - `做完后继续做了`
 
-Optional open question:
+### Optional open question
 
-`哪一步最有用，或哪里不贴合？`
+`哪一步有用，或哪里不贴合？`
+
+### Key data saved to localStorage & Feishu
+
+- `progressReached` — the selected value from the required question (primary metric)
+- `openFeedback` — optional free text
+- `task` — the original task
+- `actions` / `action` — the 3 action steps
+- `durationSeconds` — how long the user ran the timer
+- `createdAt` — timestamp
+
+### Backward compatibility
+
+Deprecated fields (`completed`, `stateAfterAction`, `chainFeeling`, `completionDepth`, `taskFit`, `resistanceChange`, `wouldStartWithoutPrompt`) are still included in the payload as empty strings, and the Feishu table and CSV export already account for them.
 
 ## Data / Feishu
 
@@ -170,40 +175,47 @@ Do not commit `.env`.
 
 The frontend keeps backward-compatible aliases in the payload so the existing Feishu table can continue collecting data:
 
-- `completed`
-- `stateAfterAction`
-- `chainFeeling`
+- `completed` → maps to `progressReached`
+- `stateAfterAction` → empty (no longer collected)
+- `chainFeeling` → empty (no longer collected)
 
-Newer fields also exist in local history / CSV:
+Newer fields in local history / CSV:
 
-- `completionDepth`
-- `taskFit`
-- `resistanceChange`
-- `wouldStartWithoutPrompt`
+- `progressReached` (primary metric)
 - `openFeedback`
 - `actions`
 - `actionMode`
 - `durationSeconds`
 
+Deprecated fields from earlier MVP (still saved as empty strings for CSV backward compat):
+- `completionDepth`, `taskFit`, `resistanceChange`, `wouldStartWithoutPrompt`
+
 If changing Feishu table schema, update `api/feedback.js` carefully. Feishu Bitable writes can fail if fields do not exist or field types mismatch.
 
 ## Deployment
 
-Fast demo deployment path:
+### Primary (Railway)
 
+Production URL: https://startflow-production.up.railway.app
+
+Deployment flow:
 1. Commit changes locally.
 2. Push to GitHub.
-3. Vercel redeploys from GitHub.
-4. Vercel environment variables must be configured:
+3. Railway auto-deploys from GitHub (`main` branch).
+4. Railway environment variables are configured in Dashboard → Variables:
    - `DEEPSEEK_API_KEY`
    - `FEISHU_APP_ID`
    - `FEISHU_APP_SECRET`
    - `FEISHU_BASE_TOKEN`
    - `FEISHU_TABLE_ID`
 
-Vercel production does not use the local `server.js` process. It uses `api/generate.js` and `api/feedback.js`.
+Railway runs `server.js` via `npm start`. The `server.js` handles both static file serving and API routes (`/api/generate`, `/api/feedback`).
 
-Local testing at:
+### Old (Vercel — archived)
+
+The project was originally deployed on Vercel using `api/generate.js` and `api/feedback.js` as serverless functions. The Vercel deployment (`startflow-mvp30`) is no longer the primary deployment. The `api/` directory and `vercel.json` remain in the repo for reference.
+
+### Local Development
 
 ```text
 http://localhost:8080
@@ -227,10 +239,12 @@ Suggested short invite text:
 
 它叫 StartFlow，用途很简单：当你有一件事想开始、但一直拖着没动时，你可以把这件事输入进去，它会给你生成一个 2 分钟内可以完成的 3 步启动链。目标不是帮你完成整件事，而是帮你先动起来。
 
+测试地址：https://startflow-production.up.railway.app
+
 使用方式：
 1. 输入一件你想开始但还没启动的事
 2. 按照页面给出的 3 个小动作做 2 分钟
-3. 如果动作不贴合，可以点“换一个更贴近我的方式”补充你的情况
+3. 如果动作不贴合，可以点"换一个更贴近我的方式"补充你的情况
 4. 结束后提交一下反馈
 
 测试时欢迎尽量真实地输入你正在拖延的事，比如写作、整理资料、查看邮件、学习、收拾东西等。
@@ -243,6 +257,6 @@ Suggested short invite text:
 
 - DeepSeek may occasionally return empty content. Fallback is expected to cover this.
 - Public demo prioritizes reasonable response time over perfect AI completion rate.
-- The app is still an MVP experiment, not a finished productivity product.
-- Do not overbuild user accounts, task management, streaks, habit tracking, or workflow features before validating the core loop.
+- The app is still a focused experiment, not a finished productivity product.
+- Do not overbuild user accounts, task management, streaks, habit tracking, or workflow features beyond the validated core loop.
 
