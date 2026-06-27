@@ -1213,6 +1213,11 @@
         currentActions = validation.actions;
       }
       currentAction = currentActions.join(' ');
+      // 重新生成时重置步骤进度，从第 1 步开始
+      if (validationContext === 'refine') {
+        currentStep = 0;
+        if (inlineFeedback) inlineFeedback.classList.remove('show');
+      }
       renderStepView();
       actionTask.textContent = '「' + currentTask + '」';
       renderDebug(data, validation, currentActions);
