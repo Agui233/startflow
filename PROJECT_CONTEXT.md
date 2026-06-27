@@ -20,16 +20,20 @@ Can a 2-minute chain of 3 very small actions help a user begin something they ha
 4. User sees a notice:
    `注意：这 3 个动作可能简单到荒谬。我们的目标不是完成任务，而是让你的手指或身体先动起来。`
 5. Steps are presented as step-by-step cards: only the current step is shown prominently, next steps are shown weakly below.
-6. User clicks `做完了，下一步` to advance through steps 1→2→3.
-7. On step 3 completion (or timer end, or "提前完成"), inline feedback expands at the bottom of the page.
-8. Feedback: 1 required question (`刚才做到哪里了？`) + 1 optional text field.
-9. User clicks `完成` → thank you page with summary.
-10. Data saved to localStorage and async-sent to Feishu.
+6. Timer auto-starts when the action view appears (lightweight: `建议用时：约 2 分钟 · 已用 0:12`). No manual "start" button.
+7. User clicks `做完了，下一步` to advance through steps 1→2→3.
+8. On step 3 completion (or 2-minute timer end), inline feedback expands at the bottom of the page.
+9. Feedback: 1 required question (`刚才做到哪里了？`) + 1 optional text field.
+10. User clicks `完成` → thank you page with summary.
+11. Data saved to localStorage and async-sent to Feishu.
 
-### Alternative paths to feedback
+### Triggers for inline feedback
 - Step 3 completed → inline feedback
-- 2-minute timer ends → inline feedback
-- User clicks "我已经做完了" → inline feedback
+- 2-minute timer ends → inline feedback (no popup, no alert, page shows "2 分钟到了。刚才做到哪里了？")
+
+### Refinement
+- User clicks `换一个更贴合我的` to open a single input field.
+- The input's placeholder adapts to the user's task via `getRefinePlaceholder()`: 7 categories with tailored example prompts (代码/项目, 沟通, 运动/身体, 学习, 写作/文档, 整理, 默认).
 
 ## Product Principles
 
@@ -126,7 +130,7 @@ How to read diagnostics:
 
 Feedback is designed to validate whether the chain actually lowered start resistance.
 
-Feedback now lives inline on the action page (no separate View 4). It appears after step 3 completion, timer end, or "已经做完了" click.
+Feedback now lives inline on the action page (no separate View 4). It appears after step 3 completion or 2-minute timer end.
 
 ### Current required question
 
@@ -143,16 +147,25 @@ Feedback now lives inline on the action page (no separate View 4). It appears af
 
 ### Key data saved to localStorage & Feishu
 
-- `progressReached` — the selected value from the required question (primary metric)
+- `completed` / `progressReached` — the selected value from the required question (primary metric)
 - `openFeedback` — optional free text
 - `task` — the original task
 - `actions` / `action` — the 3 action steps
-- `durationSeconds` — how long the user ran the timer
+- `durationSeconds` — how long the user ran the timer (auto-started on action view)
 - `createdAt` — timestamp
 
-### Backward compatibility
+### Feishu table fields written
 
-Deprecated fields (`completed`, `stateAfterAction`, `chainFeeling`, `completionDepth`, `taskFit`, `resistanceChange`, `wouldStartWithoutPrompt`) are still included in the payload as empty strings, and the Feishu table and CSV export already account for them.
+The `api/feedback.js` and `server.js` `handleFeedback` now write only the currently collected fields to the Feishu Bitable:
+
+- `task`
+- `action`
+- `completed`
+- `openFeedback`
+- `durationSeconds`
+- `createdAt`
+
+Deprecated fields (`stateAfterAction`, `wouldStartWithoutPrompt`, `progressReached`) are no longer sent to the Feishu API to avoid schema mismatch errors. They remain in localStorage and CSV export for backward compatibility.
 
 ## Data / Feishu
 
@@ -173,24 +186,20 @@ DeepSeek uses:
 
 Do not commit `.env`.
 
-The frontend keeps backward-compatible aliases in the payload so the existing Feishu table can continue collecting data:
+The frontend sends the following fields to `/api/feedback`:
 
-- `completed` → maps to `progressReached`
-- `stateAfterAction` → empty (no longer collected)
-- `chainFeeling` → empty (no longer collected)
+- `task` — the original task
+- `action` — concatenated action string
+- `completed` — the selected value (same as `progressReached`)
+- `openFeedback` — optional free text
+- `durationSeconds` — elapsed time
+- `createdAt` — ISO timestamp
+- `progressReached` — the selected value (backward compat with localStorage/CSV)
+- `actions` — array of 3 action strings (backward compat with localStorage/CSV)
 
-Newer fields in local history / CSV:
+The server-side validation only requires `task` and `completed` to be present. All other fields are optional.
 
-- `progressReached` (primary metric)
-- `openFeedback`
-- `actions`
-- `actionMode`
-- `durationSeconds`
-
-Deprecated fields from earlier MVP (still saved as empty strings for CSV backward compat):
-- `completionDepth`, `taskFit`, `resistanceChange`, `wouldStartWithoutPrompt`
-
-If changing Feishu table schema, update `api/feedback.js` carefully. Feishu Bitable writes can fail if fields do not exist or field types mismatch.
+If changing Feishu table schema, update both `api/feedback.js` and `server.js` (`handleFeedback` function) carefully. Feishu Bitable writes can fail if fields do not exist or field types mismatch.
 
 ## Deployment
 
@@ -243,9 +252,9 @@ Suggested short invite text:
 
 使用方式：
 1. 输入一件你想开始但还没启动的事
-2. 按照页面给出的 3 个小动作做 2 分钟
-3. 如果动作不贴合，可以点"换一个更贴近我的方式"补充你的情况
-4. 结束后提交一下反馈
+2. 页面会展示第 1 步，点"做完了，下一步"依次完成 3 步（计时自动开始）
+3. 如果动作不贴合，可以点"换一个更贴合我的"补充你的情况
+4. 3 步做完或 2 分钟到，页面底部会展开一题反馈，选完点完成即可
 
 测试时欢迎尽量真实地输入你正在拖延的事，比如写作、整理资料、查看邮件、学习、收拾东西等。
 我最想知道的是：它给出的动作有没有真的降低你开始的阻力。
