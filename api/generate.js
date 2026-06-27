@@ -383,7 +383,8 @@ module.exports = async (req, res) => {
           '原始任务：' + ts,
           previousActions ? '上一版：' + (Array.isArray(previousActions) ? previousActions.join(' / ') : String(previousActions)) : '',
           '用户补充：' + tl,
-          '根据补充重新生成更贴近当前情况的三步启动链。只输出 JSON 数组。'
+          '根据补充重新生成更贴近当前情况的三步启动链。只输出 JSON 数组。',
+          '注意事项：如果用户补充了"不知道做什么"/"不知道写什么"/"不知道说什么"/"不知道请求怎么写"等类似内容，第三步应给出一个具体的请求文字示例，而不是继续写泛话。'
         ].filter(Boolean).join('\n')
       : ts;
     const messages = [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: userPrompt }];
