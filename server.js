@@ -536,8 +536,8 @@ async function handleGenerate(req, res) {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: userPrompt },
       ];
-      const timeoutMs = isRefine ? 10000 : 8000;
-      const retryTimeoutMs = isRefine ? 8000 : 6000;
+      const timeoutMs = isRefine ? 18000 : 15000;
+      const retryTimeoutMs = isRefine ? 14000 : 12000;
       const maxTokens = isRefine ? 700 : 420;
 
       // 第一次调用
@@ -598,18 +598,22 @@ async function handleGenerate(req, res) {
       rawAiOutput = data.choices?.[0]?.message?.content?.trim() || '';
       let result = extractAction(data);
 
-      // 空内容 → 重试一次
+      // 空内容 → 分温度重试两次
       if (!result.action) {
-        console.warn('DeepSeek 返回空内容，重试一次');
-        try {
-          const retryResp = await callDeepSeek(apiKey, messages, 0.55, retryTimeoutMs, maxTokens);
-          if (retryResp.ok) {
-            const retryData = await retryResp.json();
-            logDeepSeekResponse('retry', retryData);
-            rawAiOutput = retryData.choices?.[0]?.message?.content?.trim() || '';
-            result = extractAction(retryData);
-          }
-        } catch {}
+        console.warn('DeepSeek 返回空内容，重试');
+        var retryTemps = [0.55, 0.75];
+        for (var ri = 0; ri < retryTemps.length; ri++) {
+          try {
+            var retryResp = await callDeepSeek(apiKey, messages, retryTemps[ri], retryTimeoutMs, maxTokens);
+            if (retryResp.ok) {
+              var retryData = await retryResp.json();
+              logDeepSeekResponse('retry-' + ri, retryData);
+              rawAiOutput = retryData.choices?.[0]?.message?.content?.trim() || '';
+              result = extractAction(retryData);
+              if (result.action) break;
+            }
+          } catch {}
+        }
       }
 
       if (result.action) {

@@ -392,8 +392,8 @@ module.exports = async (req, res) => {
         ].filter(Boolean).join('\n')
       : ts;
     const messages = [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: userPrompt }];
-    const timeoutMs = isRefine ? 10000 : 8000;
-    const retryTimeoutMs = isRefine ? 8000 : 6000;
+    const timeoutMs = isRefine ? 18000 : 15000;
+    const retryTimeoutMs = isRefine ? 14000 : 12000;
     const maxTokens = isRefine ? 700 : 420;
     let response, rawAi = '', result;
 
@@ -435,10 +435,19 @@ module.exports = async (req, res) => {
 
     if (!result.action) {
       console.warn('DeepSeek 返回空，重试');
-      try {
-        const retry = await callDeepSeek(apiKey, messages, 0.55, retryTimeoutMs, maxTokens);
-        if (retry.ok) { const rd = await retry.json(); logDeepSeekResponse('retry', rd); rawAi = rd.choices?.[0]?.message?.content?.trim()||''; result = extractAction(rd); }
-      } catch {}
+      var retryTemps = [0.55, 0.75];
+      for (var ri = 0; ri < retryTemps.length; ri++) {
+        try {
+          var retry = await callDeepSeek(apiKey, messages, retryTemps[ri], retryTimeoutMs, maxTokens);
+          if (retry.ok) {
+            var rd = await retry.json();
+            logDeepSeekResponse('retry-' + ri, rd);
+            rawAi = rd.choices?.[0]?.message?.content?.trim() || '';
+            result = extractAction(rd);
+            if (result.action) break;
+          }
+        } catch {}
+      }
     }
 
     if (result.action) {

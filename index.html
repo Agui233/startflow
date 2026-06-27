@@ -1215,18 +1215,30 @@
     }
 
     async function requestGeneratedActions(aiTask, tools, validationContext, extraPayload) {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ task: aiTask, tools: tools || '', ...(extraPayload || {}) }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      const data = await res.json();
-      if (validationContext === 'refine') data.revision = 'user_preference';
-      applyGeneratedActions(data, validationContext);
+      // 前端重试：最多 2 次
+      var lastErr = null;
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 25000);
+          const res = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task: aiTask, tools: tools || '', ...(extraPayload || {}) }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          const data = await res.json();
+          if (validationContext === 'refine') data.revision = 'user_preference';
+          applyGeneratedActions(data, validationContext);
+          return;
+        } catch (err) {
+          lastErr = err;
+          console.warn('requestGeneratedActions 第' + (attempt + 1) + '次失败:', err.message);
+        }
+      }
+      // 重试耗尽，抛异常让上游走 fallback
+      throw lastErr;
     }
 
     // ============================================
