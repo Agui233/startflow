@@ -321,48 +321,15 @@
       line-height: 1.45;
     }
 
-    /* Timer */
-    .timer-section { text-align: center; margin-bottom: 16px; }
-    .timer-display {
-      font-size: 54px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 3px;
-      color: var(--text-primary);
-      line-height: 1;
-      margin: 10px 0 10px;
+    /* Timer — lightweight */
+    .timer-section { text-align: center; padding: 2px 0; margin-top: 4px; }
+    .timer-status {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      margin: 0;
     }
-    .timer-display.running {
-      color: var(--btn-primary);
-      animation: timerPulse 1.5s ease-in-out infinite;
-    }
-    .timer-display.done {
-      color: #5cb85c;
-      animation: timerDone 1.5s ease-in-out infinite;
-    }
-    @keyframes timerPulse {
-      0%,100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-    }
-    @keyframes timerDone {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.08); }
-    }
-    .timer-progress {
-      width: 100%; height: 4px;
-      background: var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-    .timer-progress-bar {
-      height: 100%; width: 100%;
-      background: var(--btn-primary);
-      border-radius: 4px;
-      transition: width 1s linear;
-    }
-    .timer-progress-bar.done { background: #5cb85c; }
-    .timer-status { font-size: 13px; color: var(--text-secondary); margin-bottom: 10px; }
 
     /* --- Step Card (current / done / pending) --- */
     .step-card-wrap { margin-bottom: 6px; }
@@ -729,8 +696,6 @@
     @media (max-width: 480px) {
       .app { padding: 20px 16px 40px; }
       .card { padding: 20px 16px; }
-      .timer-display { font-size: 42px; margin: 8px 0; }
-      .timer-section { margin-bottom: 14px; }
       .action-motivation { font-size: 14px; line-height: 1.55; margin-bottom: 12px; }
       .step-card-current { padding: 18px 16px 14px; }
       .step-card-text { font-size: 18px; margin-bottom: 14px; }
@@ -822,19 +787,8 @@
         </details>
 
         <!-- Timer -->
-        <div class="timer-section" style="margin-top:6px;">
-          <div class="timer-display" id="timerDisplay">
-            <span id="timerMin">02</span>:<span id="timerSec">00</span>
-          </div>
-          <div class="timer-progress">
-            <div class="timer-progress-bar" id="timerBar"></div>
-          </div>
-          <p class="timer-status" id="timerStatus">准备就绪</p>
-        </div>
-
-        <div class="btn-group">
-          <button class="btn btn-primary" id="btnStartTimer">开始 2 分钟</button>
-          <button class="btn btn-ghost" id="btnDoneEarly" disabled>我已经做完了</button>
+        <div class="timer-section">
+          <p class="timer-status" id="timerStatus">建议用时：约 2 分钟 · 已用 0:00</p>
         </div>
 
         <!-- ===== 内嵌反馈（第 3 步完成后展开） ===== -->
@@ -1094,16 +1048,14 @@
         inlineFeedback.classList.add('show');
         inlineFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
-      // 停止计时（如果有）
+      // 停止计时
       stopTimer();
       timerRunning = false;
       timerCompleted = true;
-      if (timerDisplay) timerDisplay.classList.remove('running');
-      if (timerDisplay) timerDisplay.classList.add('done');
-      if (timerBar) timerBar.classList.add('done');
-      if (btnStartTimer) { btnStartTimer.textContent = '已结束'; btnStartTimer.disabled = true; }
-      if (btnDoneEarly) btnDoneEarly.disabled = true;
-      if (timerStatus) timerStatus.textContent = '完成！';
+      // 如果已经是"2分钟到了"的文案，保留它；否则显示"完成！"
+      if (timerStatus && !timerStatus.textContent.includes('2 分钟到了')) {
+        timerStatus.textContent = '完成！';
+      }
     }
 
     function normalizeTask(task) {
@@ -1256,6 +1208,7 @@
         if (refineBox) refineBox.style.display = 'none';
         resetTimer();
         showView('action');
+        startTimer();
       } catch (err) {
         console.error('generateStartAction 错误:', err);
         currentActions = fallbackActions(currentTask, currentTools);
@@ -1265,6 +1218,7 @@
         renderDebug({ source: 'frontend_fallback', reason: err.message || 'Load failed', raw: '' }, { valid: false, reason: err.message || 'Load failed' }, currentActions);
         resetTimer();
         showView('action');
+        startTimer();
       }
     }
 
@@ -1282,6 +1236,7 @@
           previousActions: currentActions
         });
         resetTimer();
+        startTimer();
       } catch (err) {
         console.error('regenerateWithPreference 错误:', err);
         renderDebug({ source: 'frontend_fallback', reason: err.message || 'Regenerate failed', raw: '' }, { valid: false, reason: err.message || 'Regenerate failed' }, currentActions);
@@ -1299,14 +1254,7 @@
       timerElapsed = 0;
       timerRunning = false;
       timerCompleted = false;
-      updateTimerDisplay();
-      timerBar.style.width = '100%';
-      timerBar.classList.remove('done');
-      timerDisplay.classList.remove('running', 'done');
-      timerStatus.textContent = '准备就绪';
-      btnStartTimer.textContent = '开始 2 分钟';
-      btnStartTimer.disabled = false;
-      btnDoneEarly.disabled = true;
+      timerStatus.textContent = '建议用时：约 2 分钟 · 已用 0:00';
       currentStep = 0;
       // 隐藏内嵌反馈
       if (inlineFeedback) inlineFeedback.classList.remove('show');
@@ -1317,22 +1265,17 @@
     }
 
     function updateTimerDisplay() {
-      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
-      const s = String(timerSeconds % 60).padStart(2, '0');
-      timerMin.textContent = m;
-      timerSec.textContent = s;
-      const pct = (timerSeconds / 120) * 100;
-      timerBar.style.width = pct + '%';
+      const m = String(Math.floor(timerElapsed / 60));
+      const s = String(timerElapsed % 60).padStart(2, '0');
+      timerStatus.textContent = '建议用时：约 2 分钟 · 已用 ' + m + ':' + s;
     }
 
     function startTimer() {
       if (timerRunning || timerCompleted) return;
       timerRunning = true;
-      timerDisplay.classList.add('running');
-      btnStartTimer.textContent = '执行中…';
-      btnStartTimer.disabled = true;
-      btnDoneEarly.disabled = false;
-      timerStatus.textContent = '正在执行…';
+      timerElapsed = 0;
+      timerSeconds = 120;
+      updateTimerDisplay();
 
       timerInterval = setInterval(() => {
         timerSeconds--;
@@ -1348,14 +1291,7 @@
       stopTimer();
       timerRunning = false;
       timerCompleted = true;
-      timerDisplay.classList.remove('running');
-      timerDisplay.classList.add('done');
-      timerBar.classList.add('done');
-      btnStartTimer.textContent = '已结束';
-      btnStartTimer.disabled = true;
-      btnDoneEarly.disabled = true;
-      timerStatus.textContent = '时间到！';
-      // 时间到 → 展开内嵌反馈
+      timerStatus.textContent = '2 分钟到了。刚才做到哪里了？';
       showInlineFeedback();
     }
 
@@ -1364,21 +1300,6 @@
         clearInterval(timerInterval);
         timerInterval = null;
       }
-    }
-
-    function doneEarly() {
-      if (!timerRunning) return;
-      stopTimer();
-      timerCompleted = true;
-      timerRunning = false;
-      timerDisplay.classList.remove('running');
-      timerDisplay.classList.add('done');
-      timerBar.classList.add('done');
-      btnStartTimer.textContent = '已结束';
-      btnStartTimer.disabled = true;
-      btnDoneEarly.disabled = true;
-      timerStatus.textContent = '你提前完成了！';
-      showInlineFeedback();
     }
 
     // ============================================
@@ -1572,12 +1493,6 @@
 
     // Step card
     btnCompleteStep.addEventListener('click', completeStep);
-
-    // Timer
-    btnStartTimer.addEventListener('click', () => {
-      if (!timerRunning && !timerCompleted) startTimer();
-    });
-    btnDoneEarly.addEventListener('click', doneEarly);
 
     // Inline Feedback: 选项点击高亮
     document.querySelectorAll('#ifOptions .if-option').forEach(opt => {
