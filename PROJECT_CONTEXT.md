@@ -1,6 +1,6 @@
 # StartFlow Project Context
 
-Last updated: 2026-06-27
+Last updated: 2026-06-28
 
 ## Product Intent
 
@@ -62,7 +62,33 @@ Output:
 
 ## AI Generation
 
-Vercel production uses:
+### SYSTEM_PROMPT structure
+
+The SYSTEM_PROMPT is defined identically in `server.js` and `api/generate.js`. It is organized into 11 sections:
+
+1. **全局目标** — 低阻力靠近任务现场，5 条合格判断标准
+2. **低阻力不等于泛化** — 禁止因强调低阻力而输出泛化动作
+3. **全局生成判断顺序** — 5 步隐式判断流程
+4. **允许轻微不贴合** — 允许低阻力泛化，禁止高阻力操作
+5. **AI 工具任务适用全局原则** — 用/让/请 + AI 工具的场景处理
+6. **Codex / AI 编程特别规则** — 默认用户非程序员，任务现场是 AI 界面
+7. **三步结构** — 各类任务的第三步指导
+8. **生成方式** — 具体名词优先、禁止关键词模板
+9. **绝对禁止** — 禁止分析/规划/说教等
+10. **好输出示例** — 含正确/错误对比示例
+11. **输出格式** — JSON 数组
+
+### Refinement prompt
+
+When user refines, the server constructs a user prompt with:
+
+- 原始任务
+- 上一版动作
+- 用户补充
+- 重新生成指令
+- 注意事项（如果用户说"不知道做什么/写什么"，第三步应给出具体示例）
+
+### Vercel production uses:
 
 - `api/generate.js`
 
