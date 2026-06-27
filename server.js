@@ -537,6 +537,7 @@ async function handleFeedback(req, res) {
       const tableId = process.env.FEISHU_TABLE_ID;
 
       if (!appId || !appSecret || !baseToken || !tableId) {
+        console.log('[feedback] missing env vars');
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ saved: false, error: 'not_configured' }));
         return;
@@ -554,48 +555,50 @@ async function handleFeedback(req, res) {
         const d = await r.json();
         token = d.tenant_access_token || '';
         if (!token) {
+          console.log('[feedback] token failed:', JSON.stringify(d));
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ saved: false, error: 'token_failed', detail: d }));
           return;
         }
       } catch (e) {
+        console.log('[feedback] token error:', e.message);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ saved: false, error: 'token_error', detail: e.message }));
         return;
       }
 
-      // 写入飞书记录
+      // 写入飞书记录（只写当前收集的字段，避免旧字段不匹配）
       try {
+        const fields = {
+          task,
+          action: action || (Array.isArray(actions) ? actions.join(' / ') : ''),
+          completed,
+          openFeedback: openFeedback || '',
+          durationSeconds: durationSeconds || 0,
+          createdAt: Date.now(),
+        };
+
         const r = await fetch(
           `https://open.feishu.cn/open-apis/bitable/v1/apps/${baseToken}/tables/${tableId}/records`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              fields: {
-                task,
-                action: action || (Array.isArray(actions) ? actions.join(' / ') : ''),
-                completed,
-                progressReached: progressReached || completed || '',
-                stateAfterAction: stateAfterAction || '',
-                wouldStartWithoutPrompt: wouldStartWithoutPrompt || '',
-                openFeedback: openFeedback || '',
-                durationSeconds: durationSeconds || 0,
-                createdAt: Date.now(),
-              }
-            }),
+            body: JSON.stringify({ fields }),
             signal: AbortSignal.timeout(8000),
           }
         );
         const d = await r.json();
         if (d.code === 0) {
+          console.log('[feedback] saved');
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ saved: true }));
         } else {
+          console.log('[feedback] write failed:', d.code, d.msg);
           res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ saved: false, error: 'write_failed', detail: d.msg }));
         }
       } catch (e) {
+        console.log('[feedback] write error:', e.message);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ saved: false, error: 'write_error', detail: e.message }));
       }

@@ -1532,7 +1532,13 @@
           createdAt: new Date().toISOString(),
           ...fb
         })
-      }).catch(e => console.error('feedback send failed:', e));
+      }).then(function(r) {
+        return r.json().then(function(d) {
+          if (!d.saved) console.error('feedback api error:', d.error, d.detail);
+        });
+      }).catch(function(e) {
+        console.error('feedback send failed:', e);
+      });
     });
 
     // Try again

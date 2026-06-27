@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { task, action, completed, stateAfterAction, wouldStartWithoutPrompt, openFeedback, durationSeconds, createdAt, progressReached, actions } = req.body || {};
+  const { task, action, completed, openFeedback, durationSeconds, progressReached, actions } = req.body || {};
 
   if (!task || !completed) {
     res.status(200).json({ saved: false, error: 'missing_fields' });
@@ -43,26 +43,22 @@ module.exports = async (req, res) => {
     return;
   }
 
-  // 写入飞书记录
+  // 写入飞书记录（只写当前收集的字段）
   try {
+    const fields = {
+      task,
+      action: action || (Array.isArray(actions) ? actions.join(' / ') : ''),
+      completed,
+      openFeedback: openFeedback || '',
+      durationSeconds: durationSeconds || 0,
+      createdAt: Date.now(),
+    };
     const r = await fetch(
       `https://open.feishu.cn/open-apis/bitable/v1/apps/${BASE_TOKEN}/tables/${TABLE_ID}/records`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({
-          fields: {
-            task,
-            action: action || (Array.isArray(actions) ? actions.join(' / ') : ''),
-            completed,
-            progressReached: progressReached || completed || '',
-            stateAfterAction: stateAfterAction || '',
-            wouldStartWithoutPrompt: wouldStartWithoutPrompt || '',
-            openFeedback: openFeedback || '',
-            durationSeconds: durationSeconds || 0,
-            createdAt: Date.now(),
-          }
-        }),
+        body: JSON.stringify({ fields }),
         signal: AbortSignal.timeout(8000),
       }
     );
