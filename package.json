@@ -1,0 +1,12 @@
+{
+  "name": "startflow",
+  "version": "1.0.0",
+  "description": "StartFlow — 行为启动实验工具",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

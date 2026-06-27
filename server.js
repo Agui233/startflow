@@ -7,7 +7,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
 // ============================================
 // 读取 .env 文件（如果存在）
@@ -514,6 +514,98 @@ async function handleGenerate(req, res) {
 }
 
 // ============================================
+// 路由：POST /api/feedback — 写入飞书多维表格
+// ============================================
+async function handleFeedback(req, res) {
+  let body = '';
+  req.on('data', chunk => { body += chunk; });
+
+  req.on('end', async () => {
+    try {
+      const parsed = JSON.parse(body);
+      const { task, action, completed, stateAfterAction, wouldStartWithoutPrompt, openFeedback, durationSeconds } = parsed;
+
+      if (!task || !completed || !stateAfterAction || !wouldStartWithoutPrompt) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ saved: false, error: 'missing_fields' }));
+        return;
+      }
+
+      const appId = process.env.FEISHU_APP_ID;
+      const appSecret = process.env.FEISHU_APP_SECRET;
+      const baseToken = process.env.FEISHU_BASE_TOKEN;
+      const tableId = process.env.FEISHU_TABLE_ID;
+
+      if (!appId || !appSecret || !baseToken || !tableId) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ saved: false, error: 'not_configured' }));
+        return;
+      }
+
+      // 获取飞书 token
+      let token = '';
+      try {
+        const r = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ app_id: appId, app_secret: appSecret }),
+          signal: AbortSignal.timeout(8000),
+        });
+        const d = await r.json();
+        token = d.tenant_access_token || '';
+        if (!token) {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ saved: false, error: 'token_failed', detail: d }));
+          return;
+        }
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ saved: false, error: 'token_error', detail: e.message }));
+        return;
+      }
+
+      // 写入飞书记录
+      try {
+        const r = await fetch(
+          `https://open.feishu.cn/open-apis/bitable/v1/apps/${baseToken}/tables/${tableId}/records`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              fields: {
+                task,
+                action: action || '',
+                completed,
+                stateAfterAction,
+                wouldStartWithoutPrompt,
+                openFeedback: openFeedback || '',
+                durationSeconds: durationSeconds || 0,
+                createdAt: Date.now(),
+              }
+            }),
+            signal: AbortSignal.timeout(8000),
+          }
+        );
+        const d = await r.json();
+        if (d.code === 0) {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ saved: true }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ saved: false, error: 'write_failed', detail: d.msg }));
+        }
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ saved: false, error: 'write_error', detail: e.message }));
+      }
+    } catch (err) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ saved: false, error: 'parse_error', detail: err.message }));
+    }
+  });
+}
+
+// ============================================
 // 路由：静态文件
 // ============================================
 function serveStatic(url, res) {
@@ -554,6 +646,8 @@ const server = http.createServer((req, res) => {
   // 路由分发
   if (req.method === 'POST' && req.url === '/api/generate') {
     handleGenerate(req, res);
+  } else if (req.method === 'POST' && req.url === '/api/feedback') {
+    handleFeedback(req, res);
   } else {
     serveStatic(req.url, res);
   }
