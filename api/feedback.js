@@ -11,9 +11,9 @@ module.exports = async (req, res) => {
     return;
   }
 
-  const { task, action, completed, stateAfterAction, wouldStartWithoutPrompt, openFeedback, durationSeconds, createdAt } = req.body || {};
+  const { task, action, completed, stateAfterAction, wouldStartWithoutPrompt, openFeedback, durationSeconds, createdAt, progressReached, actions } = req.body || {};
 
-  if (!task || !completed || !stateAfterAction || !wouldStartWithoutPrompt) {
+  if (!task || !completed) {
     res.status(200).json({ saved: false, error: 'missing_fields' });
     return;
   }
@@ -53,10 +53,11 @@ module.exports = async (req, res) => {
         body: JSON.stringify({
           fields: {
             task,
-            action: action || '',
+            action: action || (Array.isArray(actions) ? actions.join(' / ') : ''),
             completed,
-            stateAfterAction,
-            wouldStartWithoutPrompt,
+            progressReached: progressReached || completed || '',
+            stateAfterAction: stateAfterAction || '',
+            wouldStartWithoutPrompt: wouldStartWithoutPrompt || '',
             openFeedback: openFeedback || '',
             durationSeconds: durationSeconds || 0,
             createdAt: Date.now(),

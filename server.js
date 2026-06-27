@@ -523,9 +523,9 @@ async function handleFeedback(req, res) {
   req.on('end', async () => {
     try {
       const parsed = JSON.parse(body);
-      const { task, action, completed, stateAfterAction, wouldStartWithoutPrompt, openFeedback, durationSeconds } = parsed;
+      const { task, action, completed, stateAfterAction, wouldStartWithoutPrompt, openFeedback, durationSeconds, progressReached, actions } = parsed;
 
-      if (!task || !completed || !stateAfterAction || !wouldStartWithoutPrompt) {
+      if (!task || !completed) {
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ saved: false, error: 'missing_fields' }));
         return;
@@ -574,10 +574,11 @@ async function handleFeedback(req, res) {
             body: JSON.stringify({
               fields: {
                 task,
-                action: action || '',
+                action: action || (Array.isArray(actions) ? actions.join(' / ') : ''),
                 completed,
-                stateAfterAction,
-                wouldStartWithoutPrompt,
+                progressReached: progressReached || completed || '',
+                stateAfterAction: stateAfterAction || '',
+                wouldStartWithoutPrompt: wouldStartWithoutPrompt || '',
                 openFeedback: openFeedback || '',
                 durationSeconds: durationSeconds || 0,
                 createdAt: Date.now(),
